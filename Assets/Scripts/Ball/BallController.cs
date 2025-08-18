@@ -13,7 +13,7 @@ public class BallController : MonoBehaviour
     private void Start()
     {
         InitialLaunch();
-        GameManagerController.Instance.onReset += Reset;
+        GameManager.Instance.OnReset += Reset;
     }
 
     private void InitialLaunch()
@@ -50,8 +50,8 @@ public class BallController : MonoBehaviour
             offset = Mathf.Sqrt(rb.linearVelocity.magnitude) * 0.02f;
             duration = Random.Range(0.05f, 0.1f);
             
-            GameManagerController.Instance.TriggerChromaticAberrationEffects(0.2f);
-            GameManagerController.Instance.TriggerBloomEffects(0.2f);
+            PostFXManager.Instance.TriggerChromaticAberrationEffects(0.2f);
+            PostFXManager.Instance.TriggerBloomEffects(0.2f);
         }
         
         if (collision.gameObject.CompareTag("Wall"))
@@ -65,11 +65,11 @@ public class BallController : MonoBehaviour
             offset = Random.Range(0.035f, 0.075f);
             duration = Random.Range(0.035f, 0.075f);
             
-            GameManagerController.Instance.TriggerChromaticAberrationEffects(0.1f);
-            GameManagerController.Instance.TriggerBloomEffects(0.1f);
+            PostFXManager.Instance.TriggerChromaticAberrationEffects(0.1f);
+            PostFXManager.Instance.TriggerBloomEffects(0.1f);
         }
         
-        GameManagerController.Instance.DoShake(offset, duration);
+        CameraManager.Instance.DoShake(offset, duration);
         collisionParticles.EmitParticles(value);
     }
 
@@ -84,9 +84,9 @@ public class BallController : MonoBehaviour
             float offset = Random.Range(0.075f, 0.15f);
             float duration = Random.Range(0.075f, 0.15f);
             
-            GameManagerController.Instance.DoShake(offset, duration);
+            CameraManager.Instance.DoShake(offset, duration);
             
-            GameManagerController.Instance.OnScoreZoneReached(scoreZoneController.ID);
+            GameManager.Instance.OnScoreZoneReached(scoreZoneController.ID);
             Reset();
         }
     }
