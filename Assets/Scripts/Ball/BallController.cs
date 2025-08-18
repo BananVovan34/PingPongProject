@@ -7,14 +7,20 @@ public class BallController : MonoBehaviour
 {
     [SerializeField] private Rigidbody2D rb;
     [SerializeField] private EmitParticlesController collisionParticles;
+    [SerializeField] private AudioSource ballHitSound;
     [SerializeField] private float movementSpeed;
     [SerializeField] [Range(0.0f, 90.0f)] private float maxInitialAngle;
-    [SerializeField] private AudioSource ballHitSound;
     
     private void Start()
     {
         InitialLaunch();
-        GameManager.Instance.OnReset += Reset;
+    }
+
+    private void OnEnable()
+    {
+        RoundEvents.RoundStart += Reset;
+        BallEvents.OnBallHitPaddle += HandleBallHitPaddle;
+        BallEvents.OnBallHitWall += HandleBallHitWall;
     }
 
     private void InitialLaunch()
@@ -24,6 +30,36 @@ public class BallController : MonoBehaviour
         rb.linearVelocity = direction * movementSpeed;
     }
 
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Paddle"))
+        {
+            BallEvents.BallHitPaddle(rb.linearVelocity);
+        }
+        
+        if (collision.gameObject.CompareTag("Wall"))
+        {
+            BallEvents.BallHitWall(rb.linearVelocity);
+        }
+        
+        ballHitSound.Play();
+    }
+
+    private void HandleBallHitPaddle(Vector2 obj) => rb.linearVelocity *= 1.2f;
+    private void HandleBallHitWall(Vector2 obj) => rb.linearVelocity *= 1.05f;
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("ScoreZoneLeft"))
+        {
+            BallEvents.BallScored(1); // очко игроку 1
+        }
+        else if (collision.CompareTag("ScoreZoneRight"))
+        {
+            BallEvents.BallScored(2); // очко игроку 2
+        }
+    }
+    
     private void ResetPosition()
     {
         transform.position = Vector2.zero;
@@ -31,66 +67,8 @@ public class BallController : MonoBehaviour
 
     private void Reset()
     {
+        Debug.Log("Reset");
         ResetPosition();
         InitialLaunch();
-    }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        float offset = 0f;
-        float duration = 0f;
-        int value = 0;
-        
-        if (collision.gameObject.CompareTag("Paddle"))
-        {
-            Debug.Log("Paddle Collision");
-            rb.linearVelocity *= 1.2f;
-        
-            value = Random.Range(3, 6);
-        
-            offset = Mathf.Sqrt(rb.linearVelocity.magnitude) * 0.01f;
-            duration = Random.Range(0.03f, 0.7f);
-            
-            PostFXManager.Instance.TriggerChromaticAberrationEffects(0.2f);
-            PostFXManager.Instance.TriggerBloomEffects(0.2f);
-        }
-        
-        if (collision.gameObject.CompareTag("Wall"))
-        {
-            Debug.Log("Wall Collision");
-            
-            rb.linearVelocity *= 1.05f;
-        
-            value = Random.Range(2, 4);
-        
-            offset = Random.Range(0.015f, 0.035f);
-            duration = Random.Range(0.025f, 0.055f);
-            
-            PostFXManager.Instance.TriggerChromaticAberrationEffects(0.1f);
-            PostFXManager.Instance.TriggerBloomEffects(0.1f);
-        }
-        
-        CameraManager.Instance.DoShake(offset, duration);
-        collisionParticles.EmitParticles(value);
-        
-        ballHitSound.Play();
-    }
-
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        ScoreZoneController scoreZoneController = collision.GetComponent<ScoreZoneController>();
-
-        if (scoreZoneController)
-        {
-            float value = Random.Range(2, 4);
-        
-            float offset = Random.Range(0.075f, 0.15f);
-            float duration = Random.Range(0.075f, 0.15f);
-            
-            CameraManager.Instance.DoShake(offset, duration);
-            
-            GameManager.Instance.OnScoreZoneReached(scoreZoneController.ID);
-            Reset();
-        }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public class PaddleMovementController : MonoBehaviour, IMoveableController
 {
     [SerializeField] private float speed;

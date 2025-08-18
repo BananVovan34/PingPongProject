@@ -6,11 +6,23 @@ public class ParticlesManager : MonoBehaviour
     [SerializeField] private EmitParticlesController goalParticlesPlayer1;
     [SerializeField] private EmitParticlesController goalParticlesPlayer2;
     
-    public void EmitGoalParticles(byte id)
+    private void OnEnable()
+    {
+        RoundEvents.RoundEnd += PlayGoalEffects;
+    }
+
+    private void OnDisable()
+    {
+        RoundEvents.RoundEnd -= PlayGoalEffects;
+    }
+
+    private void PlayGoalEffects(byte playerId) => EmitGoalParticles(playerId);
+    
+    public void EmitGoalParticles(byte playerId)
     {
         int value = Random.Range(10, 20);
         
-        if (id == 1) goalParticlesPlayer1.EmitParticles(value);
-        if (id == 2) goalParticlesPlayer2.EmitParticles(value);
+        if (playerId == 1) goalParticlesPlayer1.EmitParticles(value);
+        if (playerId == 2) goalParticlesPlayer2.EmitParticles(value);
     }
 }

@@ -16,21 +16,30 @@ public class GameManager : MonoBehaviour
     private Vector2 _initialPlayerPosition = new Vector2(10.35f, 0.0f);
     
     public Action OnReset;
+    
+    public void OnScoreZoneReached(byte playerId)
+    {
+        RoundEvents.OnRoundEnd(playerId);
+        RoundEvents.OnRoundStart();
+    }
 
     private void Awake()
     {
         if (Instance) Destroy(gameObject);
         Instance = this;
     }
-
-    public void OnScoreZoneReached(byte playerId)
+    
+    private void OnEnable()
     {
-        scoreManager.AddScore(playerId);
-
-        particlesManager.EmitGoalParticles(playerId);
-        postFXManager.PlayGoalEffects();
-        cameraManager.DoShake(0.1f, 0.2f);
-
-		OnReset?.Invoke();
+        BallEvents.OnBallScored += OnScoreZoneReached;
+        RoundEvents.RoundStart += ResetRound;
     }
+
+    private void OnDisable()
+    {
+        BallEvents.OnBallScored -= OnScoreZoneReached;
+        RoundEvents.RoundStart -= ResetRound;
+    }
+    
+    private void ResetRound() { OnReset?.Invoke(); }
 }

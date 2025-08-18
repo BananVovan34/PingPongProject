@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.VisualScripting;
+using UnityEngine;
 
 public class CameraManager : MonoBehaviour
 {
@@ -12,7 +13,39 @@ public class CameraManager : MonoBehaviour
         if (Instance) Destroy(gameObject);
         Instance = this;
     }
+
+    private void OnEnable()
+    {
+        RoundEvents.RoundEnd += PlayGoalEffects;
+        BallEvents.OnBallHitPaddle += HandleBallHitPaddle;
+        BallEvents.OnBallHitWall += HandleBallHitWall;
+    }
+
+    private void OnDisable()
+    {
+        RoundEvents.RoundEnd -= PlayGoalEffects;
+        BallEvents.OnBallHitPaddle -= HandleBallHitPaddle;
+        BallEvents.OnBallHitWall -= HandleBallHitWall;
+    }
+
+    private void PlayGoalEffects(byte playerId) => DoShake(0.1f, 0.2f);
+
+    private void HandleBallHitPaddle(Vector2 velocity)
+    {
+        float offset = Mathf.Sqrt(velocity.magnitude) * 0.01f;
+        float duration = Random.Range(0.03f, 0.7f);
+        
+        DoShake(offset, duration);
+    }
     
+    private void HandleBallHitWall(Vector2 velocity)
+    {
+        float offset = Random.Range(0.015f, 0.035f);
+        float duration = Random.Range(0.025f, 0.055f);
+        
+        DoShake(offset, duration);
+    }
+
     public void DoShake(float offset, float duration)
     {
         cameraShake.StartShake(offset, duration);

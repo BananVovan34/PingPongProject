@@ -15,6 +15,16 @@ public class ScoreManager : MonoBehaviour
         if (Instance) Destroy(gameObject);
         Instance = this;
     }
+    
+    private void OnEnable()
+    {
+        BallEvents.OnBallScored += AddScore;
+    }
+
+    private void OnDisable()
+    {
+        BallEvents.OnBallScored -= AddScore;
+    }
 
     public void AddScore(byte playerId, int score)
     {

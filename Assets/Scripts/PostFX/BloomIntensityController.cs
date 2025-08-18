@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
+[RequireComponent(typeof(Volume))]
 public class BloomIntensityController : MonoBehaviour
 {
     [SerializeField] private AnimationCurve additionalBloomValueCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1));

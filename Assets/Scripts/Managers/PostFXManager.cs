@@ -14,10 +14,36 @@ public class PostFXManager : MonoBehaviour
         Instance = this;
     }
     
-    public void PlayGoalEffects()
+    private void OnEnable()
+    {
+        RoundEvents.RoundEnd += PlayGoalEffects;
+        BallEvents.OnBallHitPaddle += HandleBallHitPaddle;
+        BallEvents.OnBallHitWall += HandleBallHitWall;
+    }
+
+    private void OnDisable()
+    {
+        RoundEvents.RoundEnd -= PlayGoalEffects;
+        BallEvents.OnBallHitPaddle -= HandleBallHitPaddle;
+        BallEvents.OnBallHitWall -= HandleBallHitWall;
+    }
+    
+    public void PlayGoalEffects(byte playerId)
     {
         bloomIntensityController.TriggerEffect();
         chromaticAberrationController.TriggerEffect();
+    }
+    
+    private void HandleBallHitPaddle(Vector2 velocity)
+    {
+        TriggerChromaticAberrationEffects(0.2f);
+        TriggerBloomEffects(0.2f);
+    }
+    
+    private void HandleBallHitWall(Vector2 velocity)
+    {
+        TriggerChromaticAberrationEffects(0.1f);
+        TriggerBloomEffects(0.1f);
     }
     
     public void TriggerBloomEffects()

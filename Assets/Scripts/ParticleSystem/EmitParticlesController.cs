@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(ParticleSystem))]
 public class EmitParticlesController : MonoBehaviour
 {
     private ParticleSystem _particleSystem;
