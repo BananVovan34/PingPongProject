@@ -47,8 +47,8 @@ public class BallController : MonoBehaviour
         
             value = Random.Range(3, 6);
         
-            offset = Mathf.Sqrt(rb.linearVelocity.magnitude) * 0.02f;
-            duration = Random.Range(0.05f, 0.1f);
+            offset = Mathf.Sqrt(rb.linearVelocity.magnitude) * 0.01f;
+            duration = Random.Range(0.03f, 0.7f);
             
             PostFXManager.Instance.TriggerChromaticAberrationEffects(0.2f);
             PostFXManager.Instance.TriggerBloomEffects(0.2f);
@@ -62,8 +62,8 @@ public class BallController : MonoBehaviour
         
             value = Random.Range(2, 4);
         
-            offset = Random.Range(0.035f, 0.075f);
-            duration = Random.Range(0.035f, 0.075f);
+            offset = Random.Range(0.015f, 0.035f);
+            duration = Random.Range(0.025f, 0.055f);
             
             PostFXManager.Instance.TriggerChromaticAberrationEffects(0.1f);
             PostFXManager.Instance.TriggerBloomEffects(0.1f);

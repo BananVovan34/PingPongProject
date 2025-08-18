@@ -262,6 +262,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bloomIntensityController: {fileID: 613071282}
   chromaticAberrationController: {fileID: 613071283}
+--- !u!224 &430754264 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 3248075142537682492, guid: 583f8e36f497c2b4aac833dedccfefd2, type: 3}
+  m_PrefabInstance: {fileID: 2017256243840847948}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -275,6 +280,7 @@ GameObject:
   - component: {fileID: 519420029}
   - component: {fileID: 519420030}
   - component: {fileID: 519420033}
+  - component: {fileID: 519420034}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -399,6 +405,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 613071281}
+  - {fileID: 430754264}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &519420033
@@ -413,6 +420,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a06dd965dd6b1f45a314836adad2ac7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &519420034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38bb088f93e545fca0f983c9680a7490, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 1629434752}
+  followStrenth: 0.1
+  maxOffset: 0.5
 --- !u!4 &532932592 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6768077327643992448, guid: 692fd879f8f574a46b8bbdcb96f65e2f, type: 3}
@@ -997,7 +1019,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 0}
+    m_TransformParent: {fileID: 519420032}
     m_Modifications:
     - target: {fileID: 677920483996866500, guid: 583f8e36f497c2b4aac833dedccfefd2, type: 3}
       propertyPath: m_Camera
@@ -1457,5 +1479,4 @@ SceneRoots:
   - {fileID: 619394802}
   - {fileID: 242345106}
   - {fileID: 1898806027}
-  - {fileID: 2017256243840847948}
   - {fileID: 1826009696}
