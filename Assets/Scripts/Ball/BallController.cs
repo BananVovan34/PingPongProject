@@ -9,6 +9,7 @@ public class BallController : MonoBehaviour
     [SerializeField] private EmitParticlesController collisionParticles;
     [SerializeField] private float movementSpeed;
     [SerializeField] [Range(0.0f, 90.0f)] private float maxInitialAngle;
+    [SerializeField] private AudioSource ballHitSound;
     
     private void Start()
     {
@@ -71,6 +72,8 @@ public class BallController : MonoBehaviour
         
         CameraManager.Instance.DoShake(offset, duration);
         collisionParticles.EmitParticles(value);
+        
+        ballHitSound.Play();
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

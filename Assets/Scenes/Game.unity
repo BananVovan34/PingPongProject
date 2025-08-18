@@ -130,6 +130,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e60c81b1d8cc1f248b2e06313e1ea15d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!82 &242260395 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 5696788435235477089, guid: 467472d897a559947a1a4acbb090c4e8, type: 3}
+  m_PrefabInstance: {fileID: 3589041835450089506}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &242345105
 GameObject:
   m_ObjectHideFlags: 0
@@ -1240,6 +1245,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1898806027}
     m_Modifications:
+    - target: {fileID: 770386891582315716, guid: 467472d897a559947a1a4acbb090c4e8, type: 3}
+      propertyPath: ballHitSound
+      value: 
+      objectReference: {fileID: 242260395}
     - target: {fileID: 3258713873564208189, guid: 467472d897a559947a1a4acbb090c4e8, type: 3}
       propertyPath: m_Name
       value: Ball
