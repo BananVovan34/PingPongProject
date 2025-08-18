@@ -52,11 +52,11 @@ public class BallController : MonoBehaviour
     {
         if (collision.CompareTag("ScoreZoneLeft"))
         {
-            BallEvents.BallScored(1); // очко игроку 1
+            BallEvents.BallScored(1);
         }
         else if (collision.CompareTag("ScoreZoneRight"))
         {
-            BallEvents.BallScored(2); // очко игроку 2
+            BallEvents.BallScored(2);
         }
     }
     
@@ -67,7 +67,6 @@ public class BallController : MonoBehaviour
 
     private void Reset()
     {
-        Debug.Log("Reset");
         ResetPosition();
         InitialLaunch();
     }

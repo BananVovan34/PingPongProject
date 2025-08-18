@@ -29,7 +29,7 @@ public class ScoreManager : MonoBehaviour
     public void AddScore(byte playerId, int score)
     {
         if (playerId == 1) _scorePlayer1 += score;
-        if (playerId == 2) _scorePlayer2 += score;;
+        if (playerId == 2) _scorePlayer2 += score;
         
         OnScoreChanged?.Invoke(_scorePlayer1, _scorePlayer2, playerId);
     }

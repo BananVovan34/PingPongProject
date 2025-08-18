@@ -5,13 +5,6 @@ using Random = UnityEngine.Random;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
-    
-    [Header("Managers")]
-    [SerializeField] private ScoreManager scoreManager;
-    [SerializeField] private UIManager uiManager;
-    [SerializeField] private ParticlesManager particlesManager;
-    [SerializeField] private PostFXManager postFXManager;
-    [SerializeField] private CameraManager cameraManager;
 
     private Vector2 _initialPlayerPosition = new Vector2(10.35f, 0.0f);
     
