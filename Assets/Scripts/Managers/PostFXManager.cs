@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class PostFXManager : MonoBehaviour
+public class PostFXManager : BaseManager
 {
     public static PostFXManager Instance { get; private set; }
     
@@ -14,14 +14,14 @@ public class PostFXManager : MonoBehaviour
         Instance = this;
     }
     
-    private void OnEnable()
+    protected override void SubscribeEvents()
     {
         RoundEvents.RoundEnd += PlayGoalEffects;
         BallEvents.OnBallHitPaddle += HandleBallHitPaddle;
         BallEvents.OnBallHitWall += HandleBallHitWall;
     }
 
-    private void OnDisable()
+    protected override void UnsubscribeEvents()
     {
         RoundEvents.RoundEnd -= PlayGoalEffects;
         BallEvents.OnBallHitPaddle -= HandleBallHitPaddle;

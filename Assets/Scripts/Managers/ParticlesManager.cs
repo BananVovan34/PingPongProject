@@ -1,17 +1,17 @@
 ﻿using UnityEngine;
 
-public class ParticlesManager : MonoBehaviour
+public class ParticlesManager : BaseManager
 {
     [Header("Particles References")]
     [SerializeField] private EmitParticlesController goalParticlesPlayer1;
     [SerializeField] private EmitParticlesController goalParticlesPlayer2;
     
-    private void OnEnable()
+    protected override void SubscribeEvents()
     {
         RoundEvents.RoundEnd += PlayGoalEffects;
     }
 
-    private void OnDisable()
+    protected override void UnsubscribeEvents()
     {
         RoundEvents.RoundEnd -= PlayGoalEffects;
     }

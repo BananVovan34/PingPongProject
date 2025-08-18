@@ -1,17 +1,17 @@
 ﻿using UnityEngine;
 
-public class UIManager : MonoBehaviour
+public class UIManager : BaseManager
 {
     [Header("UI References")]
     [SerializeField] private ScoreText scoreTextLeft;
     [SerializeField] private ScoreText scoreTextRight;
 
-    private void OnEnable()
+    protected override void SubscribeEvents()
     {
         ScoreManager.Instance.OnScoreChanged += UpdateScoreUI;
     }
 
-    private void OnDisable()
+    protected override void UnsubscribeEvents()
     {
         ScoreManager.Instance.OnScoreChanged -= UpdateScoreUI;
     }

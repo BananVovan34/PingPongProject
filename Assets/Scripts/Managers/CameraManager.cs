@@ -1,7 +1,7 @@
 ﻿using Unity.VisualScripting;
 using UnityEngine;
 
-public class CameraManager : MonoBehaviour
+public class CameraManager : BaseManager
 {
     public static CameraManager Instance { get; private set; }
     
@@ -14,14 +14,14 @@ public class CameraManager : MonoBehaviour
         Instance = this;
     }
 
-    private void OnEnable()
+    protected override void SubscribeEvents()
     {
         RoundEvents.RoundEnd += PlayGoalEffects;
         BallEvents.OnBallHitPaddle += HandleBallHitPaddle;
         BallEvents.OnBallHitWall += HandleBallHitWall;
     }
 
-    private void OnDisable()
+    protected override void UnsubscribeEvents()
     {
         RoundEvents.RoundEnd -= PlayGoalEffects;
         BallEvents.OnBallHitPaddle -= HandleBallHitPaddle;

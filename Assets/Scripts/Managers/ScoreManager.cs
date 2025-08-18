@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-public class ScoreManager : MonoBehaviour
+public class ScoreManager : BaseManager
 {
     public static ScoreManager Instance { get; private set; }
     
@@ -16,12 +16,12 @@ public class ScoreManager : MonoBehaviour
         Instance = this;
     }
     
-    private void OnEnable()
+    protected override void SubscribeEvents()
     {
         BallEvents.OnBallScored += AddScore;
     }
 
-    private void OnDisable()
+    protected override void UnsubscribeEvents()
     {
         BallEvents.OnBallScored -= AddScore;
     }

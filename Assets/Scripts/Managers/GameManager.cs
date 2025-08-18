@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class GameManager : MonoBehaviour
+public class GameManager : BaseManager
 {
     public static GameManager Instance { get; private set; }
 
@@ -22,13 +22,13 @@ public class GameManager : MonoBehaviour
         Instance = this;
     }
     
-    private void OnEnable()
+    protected override void SubscribeEvents()
     {
         BallEvents.OnBallScored += OnScoreZoneReached;
         RoundEvents.RoundStart += ResetRound;
     }
 
-    private void OnDisable()
+    protected override void UnsubscribeEvents()
     {
         BallEvents.OnBallScored -= OnScoreZoneReached;
         RoundEvents.RoundStart -= ResetRound;
