@@ -2,17 +2,9 @@
 
 public class PostFXManager : BaseManager
 {
-    public static PostFXManager Instance { get; private set; }
-    
     [Header("PostFX References")]
     [SerializeField] private BloomIntensityController bloomIntensityController;
     [SerializeField] private ChromaticAberrationController chromaticAberrationController;
-
-    private void Awake()
-    {
-        if (Instance) Destroy(gameObject);
-        Instance = this;
-    }
     
     protected override void SubscribeEvents()
     {

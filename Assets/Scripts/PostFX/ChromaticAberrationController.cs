@@ -5,7 +5,7 @@ using UnityEngine.Rendering.Universal;
 [RequireComponent(typeof(Volume))]
 public class ChromaticAberrationController : MonoBehaviour
 {
-    [SerializeField] private AnimationCurve additionalBloomValueCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1));
+    [SerializeField] private AnimationCurve additionalIntensityValueCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1));
     [SerializeField] private float effectDuration = 0.35f;
     [SerializeField] private bool debug = false;
     
@@ -37,7 +37,7 @@ public class ChromaticAberrationController : MonoBehaviour
         
         _timer -= Time.deltaTime;
         float normalizedTime = 1 - (_timer / effectDuration);
-        float curveValue = additionalBloomValueCurve.Evaluate(normalizedTime);
+        float curveValue = additionalIntensityValueCurve.Evaluate(normalizedTime);
         _chromaticAberration.intensity.value = _defaultBloomIntensity + curveValue;
         
         if (debug) Debug.Log(normalizedTime + " | " + _chromaticAberration.intensity.value);

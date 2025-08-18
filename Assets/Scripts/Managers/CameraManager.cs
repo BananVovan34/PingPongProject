@@ -3,16 +3,8 @@ using UnityEngine;
 
 public class CameraManager : BaseManager
 {
-    public static CameraManager Instance { get; private set; }
-    
     [Header("Camera References")]
     [SerializeField] private CameraShake cameraShake;
-
-    private void Awake()
-    {
-        if (Instance) Destroy(gameObject);
-        Instance = this;
-    }
 
     protected override void SubscribeEvents()
     {

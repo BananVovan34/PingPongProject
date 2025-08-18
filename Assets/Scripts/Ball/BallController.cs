@@ -6,7 +6,6 @@ using Random = UnityEngine.Random;
 public class BallController : MonoBehaviour
 {
     [SerializeField] private Rigidbody2D rb;
-    [SerializeField] private EmitParticlesController collisionParticles;
     [SerializeField] private AudioSource ballHitSound;
     [SerializeField] private float movementSpeed;
     [SerializeField] [Range(0.0f, 90.0f)] private float maxInitialAngle;
@@ -21,6 +20,13 @@ public class BallController : MonoBehaviour
         RoundEvents.RoundStart += Reset;
         BallEvents.OnBallHitPaddle += HandleBallHitPaddle;
         BallEvents.OnBallHitWall += HandleBallHitWall;
+    }
+    
+    private void OnDisable() 
+    {
+        RoundEvents.RoundStart -= Reset;
+        BallEvents.OnBallHitPaddle -= HandleBallHitPaddle;
+        BallEvents.OnBallHitWall -= HandleBallHitWall;
     }
 
     private void InitialLaunch()

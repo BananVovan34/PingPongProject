@@ -3,18 +3,10 @@ using UnityEngine;
 
 public class ScoreManager : BaseManager
 {
-    public static ScoreManager Instance { get; private set; }
-    
     private int _scorePlayer1 = 0;
     private int _scorePlayer2 = 0;
     
     public event Action<int, int, byte> OnScoreChanged;
-
-    private void Awake()
-    {
-        if (Instance) Destroy(gameObject);
-        Instance = this;
-    }
     
     protected override void SubscribeEvents()
     {
