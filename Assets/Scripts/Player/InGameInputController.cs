@@ -2,23 +2,28 @@
 
 public class InGameInputController : MonoBehaviour
 {
-    [SerializeField] private GameObject moveableObject;
+    [SerializeField] private GameObject paddle;
     
-    private IMoveableController moveableController;
+    private IMoveableController _moveableController;
+    private IInputController _inputController;
 
     private void Awake()
     {
-        moveableController = moveableObject.GetComponent<IMoveableController>();
-        if (moveableController == null)
-        {
+        _moveableController = paddle.GetComponent<IMoveableController>();
+        _inputController = GetComponent<IInputController>();
+        
+        if (_moveableController == null)
             throw new System.NullReferenceException("No IMoveableController attached");
-        }
+
+        if (_inputController == null)
+            throw new System.NullReferenceException("No InputController attached");
+        
     }
     
     void Update()
     {
-        float direction = Input.GetAxis("Vertical");
+        Vector2 direction = _inputController.GetMovement();
         
-        moveableController.Move(new Vector2(0, direction));
+        _moveableController.Move(direction);
     }
 }

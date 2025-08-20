@@ -11,10 +11,6 @@ public class PaddleMovementController : MonoBehaviour, IMoveableController
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
-        if (!_rb)
-        {
-            throw new Exception("PaddleMovementController needs a Rigidbody2D component");
-        }
     }
 
     public void Move(Vector2 direction)
