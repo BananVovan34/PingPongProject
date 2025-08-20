@@ -9,6 +9,9 @@ public class BallController : MonoBehaviour
     [SerializeField] private Rigidbody2D rb;
     [SerializeField] private float movementSpeed;
     [SerializeField] [Range(0.0f, 90.0f)] private float maxInitialAngle;
+
+    private const float VelocityBoostPaddleHit = 1.2f;
+    private const float VelocityBoostWallHit = 1.05f;
     
     private void Start()
     {
@@ -51,8 +54,8 @@ public class BallController : MonoBehaviour
         }
     }
 
-    private void HandleBallHitPaddle(Vector2 obj) => rb.linearVelocity *= 1.2f;
-    private void HandleBallHitWall(Vector2 obj) => rb.linearVelocity *= 1.05f;
+    private void HandleBallHitPaddle(Vector2 obj) => rb.linearVelocity *= VelocityBoostPaddleHit;
+    private void HandleBallHitWall(Vector2 obj) => rb.linearVelocity *= VelocityBoostWallHit;
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
