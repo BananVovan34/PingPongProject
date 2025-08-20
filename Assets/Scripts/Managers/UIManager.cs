@@ -8,12 +8,12 @@ public class UIManager : BaseManager
 
     protected override void SubscribeEvents()
     {
-        ScoreManager.Instance.OnScoreChanged += UpdateScoreUI;
+        ScoreManager.OnScoreChanged += UpdateScoreUI;
     }
 
     protected override void UnsubscribeEvents()
     {
-        ScoreManager.Instance.OnScoreChanged -= UpdateScoreUI;
+        ScoreManager.OnScoreChanged -= UpdateScoreUI;
     }
     
     private void UpdateScoreUI(int score1, int score2, byte playerId)

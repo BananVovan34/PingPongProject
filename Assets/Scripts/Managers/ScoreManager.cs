@@ -6,7 +6,7 @@ public class ScoreManager : BaseManager
     private int _scorePlayer1 = 0;
     private int _scorePlayer2 = 0;
     
-    public event Action<int, int, byte> OnScoreChanged;
+    public static event Action<int, int, byte> OnScoreChanged;
     
     protected override void SubscribeEvents()
     {
