@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2431036652886596805}
   - component: {fileID: 3239033411896168963}
+  - component: {fileID: 2478424543309880267}
   m_Layer: 0
   m_Name: Trail
   m_TagString: Untagged
@@ -148,6 +149,18 @@ TrailRenderer:
   m_Autodestruct: 0
   m_Emitting: 1
   m_ApplyActiveColorSpace: 1
+--- !u!114 &2478424543309880267
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2474091903792683470}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89999c26a3014208ada8a7d4c0b50276, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &3258713873564208189
 GameObject:
   m_ObjectHideFlags: 0
@@ -161,6 +174,7 @@ GameObject:
   - component: {fileID: 2517506846521580997}
   - component: {fileID: 8575974029232234345}
   - component: {fileID: 8230063621433529012}
+  - component: {fileID: 5400409239352039434}
   m_Layer: 0
   m_Name: Ball
   m_TagString: Untagged
@@ -199,8 +213,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rb: {fileID: 8575974029232234345}
-  collisionParticles: {fileID: 0}
-  ballHitSound: {fileID: 5696788435235477089}
   movementSpeed: 5
   maxInitialAngle: 67
 --- !u!212 &2517506846521580997
@@ -321,6 +333,19 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.5
+--- !u!114 &5400409239352039434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3258713873564208189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f507e12c59747746b7319af819a5fa7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ballHitSound: {fileID: 5696788435235477089}
 --- !u!1 &5000666594169819334
 GameObject:
   m_ObjectHideFlags: 0
