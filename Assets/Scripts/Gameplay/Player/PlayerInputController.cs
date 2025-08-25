@@ -16,6 +16,7 @@ namespace Gameplay.Player
         private void OnDisable() => _input.Disable();
 
         public Vector2 GetMovement() => _input.Gameplay.Movement.ReadValue<Vector2>();
+        
     
     }
 }

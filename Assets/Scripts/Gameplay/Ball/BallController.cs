@@ -13,11 +13,6 @@ namespace Gameplay.Ball
 
         private const float VelocityBoostPaddleHit = 1.2f;
         private const float VelocityBoostWallHit = 1.05f;
-    
-        private void Start()
-        {
-            InitialLaunch();
-        }
 
         private void OnEnable()
         {
