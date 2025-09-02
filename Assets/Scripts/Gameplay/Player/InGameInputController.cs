@@ -10,7 +10,7 @@ namespace Gameplay.Player
         private IMoveableController _moveableController;
         private IInputController _inputController;
 
-        private void Awake()
+        private void Start()
         {
             _moveableController = paddle.GetComponent<IMoveableController>();
             _inputController = GetComponent<IInputController>();
@@ -20,8 +20,9 @@ namespace Gameplay.Player
 
             if (_inputController == null)
                 throw new System.NullReferenceException("No InputController attached");
-        
         }
+        
+        public Vector2 GetPaddlePosition => paddle.transform.position;
     
         void Update()
         {

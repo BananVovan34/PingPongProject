@@ -8,8 +8,6 @@ namespace Gameplay.Managers
 {
     public class GameManager : BaseManager
     {
-        private Vector2 _initialPlayerPosition = new Vector2(10.35f, 0.0f);
-    
         public Action OnReset;
 
         private void Start() => GameEvents.OnGameStart();
