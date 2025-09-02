@@ -13,6 +13,7 @@ namespace Gameplay.Ball
 
         private const float VelocityBoostPaddleHit = 1.2f;
         private const float VelocityBoostWallHit = 1.05f;
+        private const float MaxVelocity = 55.0f;
 
         private void OnEnable()
         {
@@ -50,9 +51,20 @@ namespace Gameplay.Ball
             }
         }
 
-        private void HandleBallHitPaddle(Vector2 obj) => rb.linearVelocity *= VelocityBoostPaddleHit;
-        private void HandleBallHitWall(Vector2 obj) => rb.linearVelocity *= VelocityBoostWallHit;
+        private void HandleBallHitPaddle(Vector2 obj)
+        {
+            rb.linearVelocity *= VelocityBoostPaddleHit;
+            
+            if (rb.linearVelocity.magnitude > MaxVelocity) rb.linearVelocity = rb.linearVelocity.normalized * MaxVelocity;
+        }
 
+        private void HandleBallHitWall(Vector2 obj)
+        {
+            rb.linearVelocity *= VelocityBoostWallHit;
+            
+            if (rb.linearVelocity.magnitude > MaxVelocity) rb.linearVelocity = rb.linearVelocity.normalized * MaxVelocity;
+        }
+        
         private void OnTriggerEnter2D(Collider2D collision)
         {
             if (collision.CompareTag("ScoreZoneLeft"))
@@ -65,15 +77,8 @@ namespace Gameplay.Ball
             }
         }
     
-        private void ResetPosition()
-        {
-            transform.position = Vector2.zero;
-        }
-
-        private void ResetVelocity()
-        {
-            rb.linearVelocity = Vector2.zero;
-        }
+        private void ResetPosition() => transform.position = Vector2.zero;
+        private void ResetVelocity() => rb.linearVelocity = Vector2.zero;
 
         private void Reset()
         {
