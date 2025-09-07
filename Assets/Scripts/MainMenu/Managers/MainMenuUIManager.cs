@@ -4,12 +4,12 @@ using UnityEngine.SceneManagement;
 
 namespace MainMenu.Managers
 {
-    public class UIManager : MonoBehaviour
+    public class MainMenuUIManager : MonoBehaviour
     {
         public void OnGameLocalStart(bool isVersusAI)
         {
-            if (isVersusAI) GameConfig.CurrentGamemode = Gamemode.LocalPve;
-            else GameConfig.CurrentGamemode = Gamemode.LocalPvp;
+            if (isVersusAI) GameStatement.Instance.CurrentGamemode = Gamemode.LocalPve;
+            else GameStatement.Instance.CurrentGamemode = Gamemode.LocalPvp;
             SceneManager.LoadScene("Gameplay");
         }
 

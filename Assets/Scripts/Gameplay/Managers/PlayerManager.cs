@@ -14,13 +14,13 @@ namespace Gameplay.Managers
 
         private void Start()
         {
-            if (GameConfig.CurrentGamemode == Gamemode.LocalPve)
+            if (GameStatement.Instance.CurrentGamemode == Gamemode.LocalPve)
             {
                 SpawnLocalPvePlayer(_initialLeftPlayerPosition);
                 SpawnAI(_initialRightPlayerPosition);
             }
             
-            if (GameConfig.CurrentGamemode == Gamemode.LocalPvp)
+            if (GameStatement.Instance.CurrentGamemode == Gamemode.LocalPvp)
             {
                 SpawnLocalPvpPlayer(_initialLeftPlayerPosition, true);
                 SpawnLocalPvpPlayer(_initialRightPlayerPosition, false);
