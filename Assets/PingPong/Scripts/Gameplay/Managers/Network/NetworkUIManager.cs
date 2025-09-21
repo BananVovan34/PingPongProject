@@ -24,39 +24,49 @@ namespace Gameplay.Managers
         
         protected override void SubscribeEvents()
         {
-            LocalScoreManager.OnScoreChanged += UpdateScoreUI;
-            if (!IsServer) return;
+            NetworkScoreManager.OnScoreChanged += UpdateScoreUI;
             GameEvents.GameEnd += ShowWinnerText;
             GameEvents.GameStart += RemoveWaitingForPlayersText;
         }
 
         protected override void UnsubscribeEvents()
         {
-            LocalScoreManager.OnScoreChanged -= UpdateScoreUI;
-            if (!IsServer) return;
+            NetworkScoreManager.OnScoreChanged -= UpdateScoreUI;
             GameEvents.GameEnd -= ShowWinnerText;
             GameEvents.GameStart -= RemoveWaitingForPlayersText;
         }
         
-        private void ShowWinnerText(byte obj) => ShowWinnerTextClientRPC(obj);
+        private void ShowWinnerText(byte obj)
+        {
+            Debug.Log("Show Winner Text");
+            if (!IsServer) return;
+            ShowWinnerTextClientRPC(obj);
+        }
+        
         private void RemoveWaitingForPlayersText()
         {
-            Debug.Log("Remove waiting for players");
+            if (!IsServer) return;
+            Debug.Log("Remove Waiting For Players Text123");
             RemoveWaitingForPlayersTextClientRPC();
         }
         
         [ClientRpc]
-        private void RemoveWaitingForPlayersTextClientRPC() => waitingForPlayersText.gameObject.SetActive(false);
+        private void RemoveWaitingForPlayersTextClientRPC() {
+            Debug.Log("Remove Waiting For Players Text2");
+            waitingForPlayersText.gameObject.SetActive(false);
+        }
         
         [ClientRpc]
         private void ShowWinnerTextClientRPC(byte obj)
         {
+            Debug.Log("Show Winner Text1");
             winnerText.text = "Player " + obj + " won!";
             winnerText.gameObject.SetActive(true);
         }
     
         private void UpdateScoreUI(int score1, int score2, byte playerId)
         {
+            Debug.Log("Update Score UI");
             scoreTextLeft.SetScore(score1);
             scoreTextRight.SetScore(score2);
         

@@ -8,10 +8,13 @@ namespace Gameplay.Managers
 {
     public class NetworkPlayerManager : BaseNetworkGameManager
     {
-        [SerializeField] public GameObject playerPrefab;
+        [Header("Settings")]
+        [SerializeField] private GameObject playerPrefab;
+        [SerializeField] private Transform player1SpawnPoint;
+        [SerializeField] private Transform player2SpawnPoint;
         
-        private Vector2 _initialLeftPlayerPosition = new Vector2(-9.35f, 0.0f);
-        private Vector2 _initialRightPlayerPosition = new Vector2(9.35f, 0.0f);
+        public Vector2 Player1SpawnPoint => player1SpawnPoint.position;
+        public Vector2 Player2SpawnPoint => player2SpawnPoint.position;
         
         protected override void SubscribeEvents()
         {
@@ -30,8 +33,9 @@ namespace Gameplay.Managers
                 
             var player1Id = clientIds[0];
             var player2Id = clientIds[1];
-            SpawnNetworkPlayer(_initialLeftPlayerPosition, player1Id);
-            SpawnNetworkPlayer(_initialRightPlayerPosition, player2Id);
+            
+            SpawnNetworkPlayer(Player1SpawnPoint, player1Id);
+            SpawnNetworkPlayer(Player2SpawnPoint, player2Id);
         }
 
         private void SpawnNetworkPlayer(Vector2 position, ulong clientId)

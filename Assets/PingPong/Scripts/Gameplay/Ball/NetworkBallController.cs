@@ -16,17 +16,6 @@ namespace Gameplay.Ball
         private const float VelocityBoostPaddleHit = 1.2f;
         private const float VelocityBoostWallHit = 1.05f;
         private const float MaxVelocity = 55.0f;
-        
-        [Header("Interpolation")]
-        [SerializeField] private float predictionFactor = 0.1f;
-        [SerializeField] private float positionLerpSpeed = 15f;
-        [SerializeField] private float velocityLerpSpeed = 10f;
-        
-        private NetworkVariable<Vector2> _position = new NetworkVariable<Vector2>(writePerm: NetworkVariableWritePermission.Server);
-        private NetworkVariable<Vector2> _velocity = new NetworkVariable<Vector2>(writePerm: NetworkVariableWritePermission.Server);
-        
-        private Vector2 _targetPosition;
-        private Vector2 _targetVelocity;
 
         private void OnEnable()
         {
@@ -44,37 +33,16 @@ namespace Gameplay.Ball
 
         public override void OnNetworkSpawn()
         {
-            if (IsServer)
+            if (!IsServer)
             {
-                Reset();
-            }
-
-            _position.OnValueChanged += OnPositionChanged;
-            _velocity.OnValueChanged += OnVelocityChanged;
-
-            _targetPosition = rb.position;
-            _targetVelocity = rb.linearVelocity;
-        }
-
-        public override void OnNetworkDespawn()
-        {
-            _position.OnValueChanged -= OnPositionChanged;
-            _velocity.OnValueChanged -= OnVelocityChanged;
-        }
-        
-        private void FixedUpdate()
-        {
-            if (IsServer)
-            {
-                // Сервер пушит данные
-                _position.Value = rb.position;
-                _velocity.Value = rb.linearVelocity;
+                rb.bodyType = RigidbodyType2D.Kinematic;
+                rb.simulated = false;
             }
             else
             {
-                Vector2 predictedPos = _targetPosition + _targetVelocity * predictionFactor;
-                rb.position = Vector2.Lerp(rb.position, predictedPos, Time.fixedDeltaTime * positionLerpSpeed);
-                rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, _targetVelocity, Time.fixedDeltaTime * velocityLerpSpeed);
+                rb.bodyType = RigidbodyType2D.Dynamic;
+                rb.simulated = true;
+                Reset();
             }
         }
         
@@ -85,18 +53,6 @@ namespace Gameplay.Ball
             rb.linearVelocity = direction * movementSpeed;
         
             BallEvents.BallLaunch();
-        }
-        
-        private void OnPositionChanged(Vector2 oldPosition, Vector2 newPosition)
-        {
-            if (!IsServer)
-                rb.position = newPosition;
-        }
-
-        private void OnVelocityChanged(Vector2 oldVelocity, Vector2 newVelocity)
-        {
-            if (!IsServer)
-                rb.linearVelocity = newVelocity;
         }
 
 

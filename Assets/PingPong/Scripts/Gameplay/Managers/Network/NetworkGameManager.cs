@@ -83,7 +83,7 @@ namespace Gameplay.Managers
 
         private void EndGame(byte playerId)
         {
-            CloseSession();
+            StartCoroutine(CloseSession());
         }
 
         private IEnumerator CloseSession()

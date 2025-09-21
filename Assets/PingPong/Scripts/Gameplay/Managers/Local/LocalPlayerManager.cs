@@ -1,30 +1,31 @@
 ﻿using Gameplay.AI;
 using Gameplay.Game;
 using Gameplay.Player;
-using Unity.Netcode;
 using UnityEngine;
 
 namespace Gameplay.Managers
 {
     public class LocalPlayerManager : MonoBehaviour
     {
-        [SerializeField] public GameObject playerPrefab;
+        [SerializeField] private GameObject playerPrefab;
+        [SerializeField] private Transform player1SpawnPoint;
+        [SerializeField] private Transform player2SpawnPoint;
         
-        private Vector2 _initialLeftPlayerPosition = new Vector2(-10.35f, 0.0f);
-        private Vector2 _initialRightPlayerPosition = new Vector2(10.35f, 0.0f);
+        public Vector2 Player1SpawnPoint => player1SpawnPoint.position;
+        public Vector2 Player2SpawnPoint => player2SpawnPoint.position;
 
         private void Start()
         {
             if (GameStatement.Instance.CurrentStatus == Status.LocalPve)
             {
-                SpawnLocalPvePlayer(_initialLeftPlayerPosition);
-                SpawnAI(_initialRightPlayerPosition);
+                SpawnLocalPvePlayer(Player1SpawnPoint);
+                SpawnAI(Player2SpawnPoint);
             }
             
             if (GameStatement.Instance.CurrentStatus == Status.LocalPvp)
             {
-                SpawnLocalPvpPlayer(_initialLeftPlayerPosition, true);
-                SpawnLocalPvpPlayer(_initialRightPlayerPosition, false);
+                SpawnLocalPvpPlayer(Player1SpawnPoint, true);
+                SpawnLocalPvpPlayer(Player2SpawnPoint, false);
             }
         }
 

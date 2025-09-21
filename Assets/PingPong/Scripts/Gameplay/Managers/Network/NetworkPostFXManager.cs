@@ -14,27 +14,34 @@ namespace Gameplay.Managers
 
         protected override void SubscribeEvents()
         {
-            if (IsServer)
-            {
-                RoundEvents.RoundEnd += OnRoundEndServer;
-                BallEvents.OnBallHitPaddle += OnBallHitPaddleServer;
-                BallEvents.OnBallHitWall += OnBallHitWallServer;
-            }
+            RoundEvents.RoundEnd += OnRoundEndServer;
+            BallEvents.OnBallHitPaddle += OnBallHitPaddleServer;
+            BallEvents.OnBallHitWall += OnBallHitWallServer;
         }
 
         protected override void UnsubscribeEvents()
         {
-            if (IsServer)
-            {
-                RoundEvents.RoundEnd -= OnRoundEndServer;
-                BallEvents.OnBallHitPaddle -= OnBallHitPaddleServer;
-                BallEvents.OnBallHitWall -= OnBallHitWallServer;
-            }
+            RoundEvents.RoundEnd -= OnRoundEndServer;
+            BallEvents.OnBallHitPaddle -= OnBallHitPaddleServer;
+            BallEvents.OnBallHitWall -= OnBallHitWallServer;
         }
 
-        private void OnRoundEndServer(byte playerId) => PlayGoalEffectsClientRpc();
-        private void OnBallHitPaddleServer(Vector2 velocity) => BallHitPaddleClientRpc();
-        private void OnBallHitWallServer(Vector2 velocity) => BallHitWallClientRpc();
+        private void OnRoundEndServer(byte playerId) {
+            if (!IsServer) return;
+            PlayGoalEffectsClientRpc();
+        }
+        
+        private void OnBallHitPaddleServer(Vector2 velocity)
+        {
+            if (!IsServer) return;
+            BallHitPaddleClientRpc();
+        }
+        
+        private void OnBallHitWallServer(Vector2 velocity)
+        {
+            if (!IsServer) return;
+            BallHitWallClientRpc();
+        }
 
         [ClientRpc]
         private void PlayGoalEffectsClientRpc()

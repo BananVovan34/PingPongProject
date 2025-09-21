@@ -35,6 +35,8 @@ namespace Gameplay.Managers
             if (playerId == 2) ScorePlayer2 += score;
         
             OnScoreChanged?.Invoke(ScorePlayer1, ScorePlayer2, playerId);
+
+            CheckWinConditions();
         }
         
         private void CheckWinConditions()
