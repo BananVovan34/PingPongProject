@@ -13,17 +13,19 @@ namespace Gameplay.Managers
 
         protected override void SubscribeEvents()
         {
-            if (IsServer)
-                RoundEvents.RoundEnd += OnRoundEndServer;
+            RoundEvents.RoundEnd += OnRoundEndServer;
         }
 
         protected override void UnsubscribeEvents()
         {
-            if (IsServer)
-                RoundEvents.RoundEnd -= OnRoundEndServer;
+            RoundEvents.RoundEnd -= OnRoundEndServer;
         }
 
-        private void OnRoundEndServer(byte playerId) => PlayGoalEffectsClientRpc(playerId);
+        private void OnRoundEndServer(byte playerId)
+        {
+            if (!IsServer) return;
+            PlayGoalEffectsClientRpc(playerId);
+        }
 
         [ClientRpc]
         private void PlayGoalEffectsClientRpc(byte playerId)

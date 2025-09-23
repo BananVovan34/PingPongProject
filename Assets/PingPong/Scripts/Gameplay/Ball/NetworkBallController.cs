@@ -63,12 +63,26 @@ namespace Gameplay.Ball
             if (collision.gameObject.CompareTag("Paddle"))
             {
                 BallEvents.BallHitPaddle(rb.linearVelocity);
+                BallHitPaddleClientRpc(rb.linearVelocity);
             }
         
             if (collision.gameObject.CompareTag("Wall"))
             {
                 BallEvents.BallHitWall(rb.linearVelocity);
+                BallHitWallClientRpc(rb.linearVelocity);
             }
+        }
+        
+        [ClientRpc]
+        private void BallHitPaddleClientRpc(Vector2 velocity)
+        {
+            BallEvents.BallHitPaddle(velocity);
+        }
+
+        [ClientRpc]
+        private void BallHitWallClientRpc(Vector2 velocity)
+        {
+            BallEvents.BallHitWall(velocity);
         }
 
         private void HandleBallHitPaddle(Vector2 obj)
@@ -92,11 +106,19 @@ namespace Gameplay.Ball
             if (collision.CompareTag("ScoreZoneLeft"))
             {
                 BallEvents.BallScored(1);
+                BallScoredClientRpc(1);
             }
             else if (collision.CompareTag("ScoreZoneRight"))
             {
                 BallEvents.BallScored(2);
+                BallScoredClientRpc(1);
             }
+        }
+        
+        [ClientRpc]
+        private void BallScoredClientRpc(byte playerId)
+        {
+            BallEvents.BallScored(playerId);
         }
     
         private void ResetPosition() => rb.position = Vector2.zero;

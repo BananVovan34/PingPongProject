@@ -72,9 +72,16 @@ namespace Gameplay.Managers
             {
                 _gameStatus = GameStatus.PLAYING;
                 GameEvents.OnGameStart();
+                OnGameStartClientRPC();
             }
         }
-        
+
+        [ClientRpc]
+        private void OnGameStartClientRPC()
+        {
+            GameEvents.OnGameStart();
+        }
+
         private void StartGame() {
             _gameStatus = GameStatus.PLAYING;
             
@@ -96,9 +103,17 @@ namespace Gameplay.Managers
         public void OnScoreZoneReached(byte playerId)
         {
             RoundEvents.OnRoundEnd(playerId);
+            OnRoundEndClientRPC(playerId);
+            RoundEvents.OnRoundStart();
+            OnRoundStartClientRPC();
+        }
+
+        [ClientRpc]
+        private void OnRoundStartClientRPC()
+        {
             RoundEvents.OnRoundStart();
         }
-    
+
         protected override void SubscribeEvents()
         {
             GameEvents.GameStart += StartGame;
@@ -113,6 +128,12 @@ namespace Gameplay.Managers
             BallEvents.OnBallScored -= OnScoreZoneReached;
             RoundEvents.RoundStart -= ResetRound;
             GameEvents.GameEnd -= EndGame;
+        }
+        
+        [ClientRpc]
+        private void OnRoundEndClientRPC(byte playerId)
+        {
+            RoundEvents.OnRoundEnd(playerId);
         }
     
         private void ResetRound() => OnReset?.Invoke();
