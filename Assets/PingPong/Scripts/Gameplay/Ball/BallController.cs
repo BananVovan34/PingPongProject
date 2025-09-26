@@ -14,6 +14,8 @@ namespace PingPong.Scripts.Gameplay.Ball
     [RequireComponent(typeof(NetworkRigidbody2D))]
     public class BallController : NetworkBehaviour
     {
+        public static BallController Instance { get; private set; }
+        
         [SerializeField] private float movementSpeed;
         [SerializeField, Range(0f, 90f)] private float maxInitialAngle = 45f;
         
@@ -30,15 +32,13 @@ namespace PingPong.Scripts.Gameplay.Ball
         private void Awake()
         {
             _rigidbody2D = GetComponent<Rigidbody2D>();
-
-            if (IsServer)
+            
+            if (Instance != null && Instance != this)
             {
-                InitLaunch();
+                Destroy(gameObject);
+                return;
             }
-            else
-            {
-                _rigidbody2D.simulated = false;
-            }
+            Instance = this;
         }
 
         public override void OnNetworkSpawn()
@@ -84,7 +84,14 @@ namespace PingPong.Scripts.Gameplay.Ball
         private void Reset()
         {
             transform.position = Vector2.zero;
-            InitLaunch();
+            if (IsServer)
+            {
+                InitLaunch();
+            }
+            else
+            {
+                _rigidbody2D.simulated = false;
+            }
             
             OnReset?.Invoke();
         }

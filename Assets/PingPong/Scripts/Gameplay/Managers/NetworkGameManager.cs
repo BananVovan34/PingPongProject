@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using PingPong.Scripts.Gameplay.Ball;
 using Unity.Netcode;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -31,24 +32,29 @@ namespace PingPong.Scripts.Gameplay.Managers
             _currentGameState = GameState.WaitingForPlayers;
         }
 
-        private void OnEnable()
+        public override void OnNetworkSpawn()
         {
             if (!IsServer) return;
 
             NetworkPlayerManager.Instance.OnClientConnected += TryStartGame;
             NetworkPlayerManager.Instance.OnClientDisconnected += EndGame;
+
+            BallController.Instance.OnScoreZoneReached += EndRound;
         }
 
-        private void OnDisable()
+        public override void OnNetworkDespawn()
         {
             if (!IsServer) return;
             
             NetworkPlayerManager.Instance.OnClientConnected -= TryStartGame;
             NetworkPlayerManager.Instance.OnClientDisconnected -= EndGame;
+            
+            BallController.Instance.OnScoreZoneReached -= EndRound;
         }
 
         private void TryStartGame(ulong obj)
         {
+            Debug.Log("TryStartGame");
             int countOfConnectedClients = NetworkPlayerManager.Instance.ConnectedClients.Count;
             
             if (countOfConnectedClients >= 2 && _currentGameState == GameState.WaitingForPlayers)
@@ -57,11 +63,13 @@ namespace PingPong.Scripts.Gameplay.Managers
 
         private void StartGame()
         {
+            Debug.Log("StartGame");
             _currentGameState = GameState.Playing;
             OnGameStart?.Invoke();
+            StartRound();
         }
 
-        private void EndRound()
+        private void EndRound(string obj)
         {
             OnRoundEnd?.Invoke();
             StartCoroutine(BeforeStartRound());
@@ -69,7 +77,7 @@ namespace PingPong.Scripts.Gameplay.Managers
 
         private IEnumerator BeforeStartRound()
         {
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(2.5f);
             StartRound();
         }
 

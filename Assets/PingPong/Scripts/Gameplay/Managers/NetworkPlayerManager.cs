@@ -70,23 +70,25 @@ namespace PingPong.Scripts.Gameplay.Managers
 
         private void SpawnNetworkPlayer(byte playerId, ulong clientId)
         {
+            Debug.Log("Spawning player " + playerId);
+            
             Vector3 position = playerId == 0 ? Player1SpawnPoint : Player2SpawnPoint;
             
             GameObject playerInstance = Instantiate(playerPrefab, position, Quaternion.identity);
-            
             NetworkObject networkObject = playerInstance.GetComponent<NetworkObject>();
-            
             networkObject.SpawnAsPlayerObject(clientId);
         }
 
         private void ClientConnected(ulong clientId)
         {
+            Debug.Log($"Client {clientId} connected");
             if (!_connectedClients.Contains(clientId)) _connectedClients.Add(clientId);
             OnClientConnected?.Invoke(clientId);
         }
         
         private void ClientDisconnected(ulong clientId)
         {
+            Debug.Log($"Client {clientId} disconnected");
             _connectedClients.Remove(clientId);
             OnClientDisconnected?.Invoke(clientId);
         }
