@@ -28,6 +28,7 @@ namespace PingPong.Scripts.Gameplay.Ball
         public event Action OnReset;
         public event Action<float> OnBoostVelocity;
         public event Action<string> OnScoreZoneReached;
+        public event Action OnBallHit;
 
         private void Awake()
         {
@@ -71,6 +72,8 @@ namespace PingPong.Scripts.Gameplay.Ball
             
             if (collision.gameObject.CompareTag("Wall")) BoostVelocity(WallHitBoostVelocity);
             if (collision.gameObject.CompareTag("Player")) BoostVelocity(PlayerHitBoostVelocity);
+            
+            OnBallHit?.Invoke();
         }
 
         private void OnTriggerEnter2D(Collider2D collision)
@@ -96,14 +99,14 @@ namespace PingPong.Scripts.Gameplay.Ball
             OnReset?.Invoke();
         }
 
-        private void BoostVelocity(float obj)
+        private void BoostVelocity(float value)
         {
-            _rigidbody2D.linearVelocity *= obj;
+            _rigidbody2D.linearVelocity *= value;
             
             if (_rigidbody2D.linearVelocity.magnitude > MaxVelocity)
                 _rigidbody2D.linearVelocity = _rigidbody2D.linearVelocity.normalized * MaxVelocity;
             
-            OnBoostVelocity?.Invoke(obj);
+            OnBoostVelocity?.Invoke(value);
         }
     }
 }
