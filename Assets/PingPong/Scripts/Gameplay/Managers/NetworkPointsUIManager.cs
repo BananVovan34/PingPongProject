@@ -1,5 +1,4 @@
 ﻿using PingPong.Scripts.Gameplay.UI;
-using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 

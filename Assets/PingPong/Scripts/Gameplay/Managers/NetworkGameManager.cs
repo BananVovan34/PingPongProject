@@ -2,7 +2,6 @@
 using System.Collections;
 using PingPong.Scripts.Gameplay.Ball;
 using Unity.Netcode;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace PingPong.Scripts.Gameplay.Managers

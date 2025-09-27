@@ -1,5 +1,4 @@
-﻿using System;
-using PingPong.Scripts.Gameplay.Interfaces;
+﻿using PingPong.Scripts.Gameplay.Interfaces;
 using Unity.Netcode;
 using UnityEngine;
 
