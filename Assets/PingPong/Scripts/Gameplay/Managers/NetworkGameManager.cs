@@ -16,7 +16,7 @@ namespace PingPong.Scripts.Gameplay.Managers
         private int _lastCountOfConnectedClients;
         
         public event Action OnGameStart;
-        public event Action OnGameEnd;
+        public event Action<byte> OnGameEnd;
         public event Action OnRoundStart;
         public event Action OnRoundEnd;
         
@@ -37,7 +37,8 @@ namespace PingPong.Scripts.Gameplay.Managers
             if (!IsServer) return;
 
             NetworkPlayerManager.Instance.OnClientConnected += TryStartGame;
-            NetworkPlayerManager.Instance.OnClientDisconnected += EndGame;
+            
+            NetworkScoreManager.Instance.OnScoredPointsToWin += EndGame;
 
             BallController.Instance.OnScoreZoneReached += EndRound;
         }
@@ -47,7 +48,8 @@ namespace PingPong.Scripts.Gameplay.Managers
             if (!IsServer) return;
             
             NetworkPlayerManager.Instance.OnClientConnected -= TryStartGame;
-            NetworkPlayerManager.Instance.OnClientDisconnected -= EndGame;
+            
+            NetworkScoreManager.Instance.OnScoredPointsToWin -= EndGame;
             
             BallController.Instance.OnScoreZoneReached -= EndRound;
         }
@@ -86,10 +88,10 @@ namespace PingPong.Scripts.Gameplay.Managers
             OnRoundStart?.Invoke();
         }
 
-        private void EndGame(ulong obj)
+        private void EndGame(byte winnerId)
         {
             _currentGameState = GameState.End;
-            OnGameEnd?.Invoke();
+            OnGameEnd?.Invoke(winnerId);
         }
     }
 
