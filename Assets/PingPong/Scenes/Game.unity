@@ -3155,29 +3155,9 @@ PrefabInstance:
       propertyPath: GlobalObjectIdHash
       value: 3497849700
       objectReference: {fileID: 0}
-    - target: {fileID: 2160740278066129771, guid: a0d327537afd5f149827678f4a448d60, type: 3}
-      propertyPath: InScenePlacedSourceGlobalObjectIdHash
-      value: 3323795126
-      objectReference: {fileID: 0}
     - target: {fileID: 6158325486748201215, guid: a0d327537afd5f149827678f4a448d60, type: 3}
       propertyPath: m_Name
       value: Ball
-      objectReference: {fileID: 0}
-    - target: {fileID: 8997917336998586170, guid: a0d327537afd5f149827678f4a448d60, type: 3}
-      propertyPath: movementSpeed
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 9220764141479592502, guid: a0d327537afd5f149827678f4a448d60, type: 3}
-      propertyPath: m_BodyType
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9220764141479592502, guid: a0d327537afd5f149827678f4a448d60, type: 3}
-      propertyPath: m_Interpolate
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9220764141479592502, guid: a0d327537afd5f149827678f4a448d60, type: 3}
-      propertyPath: m_GravityScale
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
