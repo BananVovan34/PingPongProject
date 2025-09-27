@@ -9,8 +9,8 @@ namespace PingPong.Scripts.Gameplay.Managers
     {
         public static NetworkScoreManager Instance { get; private set; }
         
-        private NetworkVariable<int> player1Points = new NetworkVariable<int>();
-        private NetworkVariable<int> player2Points = new NetworkVariable<int>();
+        public NetworkVariable<int> player1Points = new NetworkVariable<int>();
+        public NetworkVariable<int> player2Points = new NetworkVariable<int>();
 
         private const int PointsToWin = 11;
         
