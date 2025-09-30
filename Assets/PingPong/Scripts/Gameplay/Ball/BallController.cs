@@ -83,12 +83,22 @@ namespace PingPong.Scripts.Gameplay.Ball
             if (!IsServer) return;
             
             if (collision.gameObject.CompareTag("ScoreZoneLeft") || collision.gameObject.CompareTag("ScoreZoneRight"))
+            {
                 OnScoreZoneReached?.Invoke(collision.tag);
+                EnableClientRPC(false);
+            }
         }
+
+        [ClientRpc]
+        private void EnableClientRPC(bool value) =>
+            enabled = value;
 
         private void Reset()
         {
-            transform.position = Vector2.zero;
+            var netTransform = GetComponent<NetworkTransform>();
+            netTransform.Teleport(Vector3.zero, Quaternion.identity, new Vector3(0.5f, 0.5f, 0.5f));
+            
+            EnableClientRPC(true);
             if (IsServer)
             {
                 InitLaunch();
