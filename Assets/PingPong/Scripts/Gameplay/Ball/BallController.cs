@@ -47,6 +47,7 @@ namespace PingPong.Scripts.Gameplay.Ball
             if (!IsServer) return;
             
             NetworkGameManager.Instance.OnRoundStart += Reset;
+            NetworkGameManager.Instance.OnGameEnd += EndGameHandler;
         }
         
         public override void OnNetworkDespawn()
@@ -54,6 +55,7 @@ namespace PingPong.Scripts.Gameplay.Ball
             if (!IsServer) return;
             
             NetworkGameManager.Instance.OnRoundStart -= Reset;
+            NetworkGameManager.Instance.OnGameEnd -= EndGameHandler;
         }
 
         private void InitLaunch()
@@ -107,6 +109,13 @@ namespace PingPong.Scripts.Gameplay.Ball
                 _rigidbody2D.linearVelocity = _rigidbody2D.linearVelocity.normalized * MaxVelocity;
             
             OnBoostVelocity?.Invoke(value);
+        }
+
+        private void EndGameHandler(byte obj)
+        {
+            NetworkGameManager.Instance.OnRoundStart -= Reset;
+            
+            enabled = false;
         }
     }
 }
