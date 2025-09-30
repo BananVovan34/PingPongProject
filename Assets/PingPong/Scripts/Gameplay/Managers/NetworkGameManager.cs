@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Linq;
 using PingPong.Scripts.Gameplay.Ball;
 using Unity.Netcode;
 using UnityEngine;
@@ -36,6 +37,7 @@ namespace PingPong.Scripts.Gameplay.Managers
             if (!IsServer) return;
 
             NetworkPlayerManager.Instance.OnClientConnected += TryStartGame;
+            NetworkPlayerManager.Instance.OnClientDisconnected += ClientDisconnected;
             
             NetworkScoreManager.Instance.OnScoredPointsToWin += EndGame;
 
@@ -47,10 +49,24 @@ namespace PingPong.Scripts.Gameplay.Managers
             if (!IsServer) return;
             
             NetworkPlayerManager.Instance.OnClientConnected -= TryStartGame;
+            NetworkPlayerManager.Instance.OnClientDisconnected -= ClientDisconnected;
             
             NetworkScoreManager.Instance.OnScoredPointsToWin -= EndGame;
             
             BallController.Instance.OnScoreZoneReached -= EndRound;
+        }
+
+        private void ClientDisconnected(ulong obj)
+        {
+            int countOfConnectedClients = NetworkPlayerManager.Instance.ConnectedClients.Count;
+            
+            if (countOfConnectedClients <= 1 && _currentGameState == GameState.Playing)
+            {
+                var playerIds = NetworkPlayerManager.Instance.PlayerIds;
+                byte winnerId = playerIds.Contains((byte) 0) ? (byte) 0 : (byte) 1;
+                
+                EndGame(winnerId);
+            }
         }
 
         private void TryStartGame(ulong obj)

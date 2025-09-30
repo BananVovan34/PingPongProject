@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -17,7 +18,10 @@ namespace PingPong.Scripts.Gameplay.Managers
         public static NetworkPlayerManager Instance { get; private set; }
         
         private List<ulong> _connectedClients = new List<ulong>();
-        public List<ulong> ConnectedClients => _connectedClients;
+        public IReadOnlyList<ulong> ConnectedClients => _connectedClients;
+        
+        private List<byte> _playerIds = new List<byte>();
+        public IReadOnlyList<byte> PlayerIds => _playerIds;
         
         public event Action<ulong> OnClientConnected;
         public event Action<ulong> OnClientDisconnected;
@@ -54,6 +58,7 @@ namespace PingPong.Scripts.Gameplay.Managers
             }
             
             _connectedClients.Clear();
+            _playerIds.Clear();
         }
 
         private void SpawnPlayers()
@@ -65,6 +70,8 @@ namespace PingPong.Scripts.Gameplay.Managers
                 var currentClientId = _connectedClients[i];
                 
                 SpawnNetworkPlayer((byte)i, currentClientId);
+                
+                _playerIds.Add((byte)i);
             }
         }
 
