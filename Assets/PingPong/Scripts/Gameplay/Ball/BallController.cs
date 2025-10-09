@@ -58,6 +58,9 @@ namespace PingPong.Scripts.Gameplay.Ball
             NetworkGameManager.Instance.OnGameEnd -= EndGameHandler;
         }
 
+        /// <summary>
+        /// Gives initial velocity
+        /// </summary>
         private void InitLaunch()
         {
             Vector2 direction = Random.value > 0.5f ? Vector2.left : Vector2.right;
@@ -68,6 +71,10 @@ namespace PingPong.Scripts.Gameplay.Ball
             _rigidbody2D.linearVelocity = direction * movementSpeed;
         }
 
+        /// <summary>
+        /// OnBallHit handler
+        /// </summary>
+        /// <param name="collision"></param>
         private void OnCollisionEnter2D(Collision2D collision)
         {
             if (!IsServer) return;
@@ -89,10 +96,17 @@ namespace PingPong.Scripts.Gameplay.Ball
             }
         }
 
+        /// <summary>
+        /// Client RPC method to enable GameObject
+        /// </summary>
+        /// <param name="value"></param>
         [ClientRpc]
         private void EnableClientRPC(bool value) =>
             enabled = value;
 
+        /// <summary>
+        /// Reset current transform and give initial velocity
+        /// </summary>
         private void Reset()
         {
             var netTransform = GetComponent<NetworkTransform>();
@@ -111,6 +125,10 @@ namespace PingPong.Scripts.Gameplay.Ball
             OnReset?.Invoke();
         }
 
+        /// <summary>
+        /// Multiply velocity on value
+        /// </summary>
+        /// <param name="value"></param>
         private void BoostVelocity(float value)
         {
             _rigidbody2D.linearVelocity *= value;
@@ -121,6 +139,10 @@ namespace PingPong.Scripts.Gameplay.Ball
             OnBoostVelocity?.Invoke(value);
         }
 
+        /// <summary>
+        /// Ball is disabled after end game
+        /// </summary>
+        /// <param name="obj"></param>
         private void EndGameHandler(byte obj)
         {
             NetworkGameManager.Instance.OnRoundStart -= Reset;

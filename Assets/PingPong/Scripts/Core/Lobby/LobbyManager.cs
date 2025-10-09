@@ -19,8 +19,17 @@ namespace PingPong.Scripts.Multiplayer.Lobby
     {
         public static LobbyManager Instance { get; private set; }
 
+        /// <summary>
+        /// Host lobby, if you hosted
+        /// </summary>
         private Unity.Services.Lobbies.Models.Lobby _hostLobby;
+        /// <summary>
+        /// Joined lobby, if you joined
+        /// </summary>
         private Unity.Services.Lobbies.Models.Lobby _joinedLobby;
+        /// <summary>
+        /// Send heartbeat to UGS to tell lobby is alive
+        /// </summary>
         private float _heartbeatTimer;
 
         private const string RelayCodeKey = "RelayCode";
@@ -44,6 +53,9 @@ namespace PingPong.Scripts.Multiplayer.Lobby
             await InitializeUnityAuthentication();
         }
 
+        /// <summary>
+        /// UGS authentication
+        /// </summary>
         private async Task InitializeUnityAuthentication()
         {
             await UnityServices.InitializeAsync();
@@ -62,6 +74,9 @@ namespace PingPong.Scripts.Multiplayer.Lobby
             HandlerLobbyHeartbeat();
         }
 
+        /// <summary>
+        /// Lobby heartbeat logic to send packets lobby is alive
+        /// </summary>
         private async void HandlerLobbyHeartbeat()
         {
             if (_hostLobby == null) return;
@@ -87,6 +102,11 @@ namespace PingPong.Scripts.Multiplayer.Lobby
             _ = CreateLobby("New Lobby", false);
         }
 
+        /// <summary>
+        /// Create lobby with two params
+        /// </summary>
+        /// <param name="lobbyName"></param>
+        /// <param name="isPrivate"></param>
         public async Task CreateLobby(string lobbyName = "New Lobby", bool isPrivate = false) {
             try
             {
@@ -111,6 +131,9 @@ namespace PingPong.Scripts.Multiplayer.Lobby
             }
         }
 
+        /// <summary>
+        /// Create Peer-2-peer connection with players using UGS
+        /// </summary>
         private async Task SetupRelayForHost()
         {
             try

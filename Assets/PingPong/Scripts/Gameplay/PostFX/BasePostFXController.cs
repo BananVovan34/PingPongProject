@@ -14,6 +14,14 @@ namespace PingPong.Scripts.Gameplay.PostFX
 
         private void Update()
         {
+            PostFXHandler();
+        }
+
+        /// <summary>
+        /// Curve processing and applying the value to the effect
+        /// </summary>
+        private void PostFXHandler()
+        {
             if (!_isActive) return;
 
             _timer -= Time.deltaTime;
@@ -25,7 +33,7 @@ namespace PingPong.Scripts.Gameplay.PostFX
             if (_timer <= 0f)
                 ResetEffect();
         }
-        
+
         protected abstract void ApplyEffect(float curveValue);
         protected abstract void ResetToDefault();
 

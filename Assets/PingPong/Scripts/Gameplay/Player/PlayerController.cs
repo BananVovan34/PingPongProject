@@ -42,6 +42,10 @@ namespace PingPong.Scripts.Gameplay.Player
             SendInputServerRpc(direction);
         }
         
+        /// <summary>
+        /// Sending input to the server, processing, and applying it to an object
+        /// </summary>
+        /// <param name="direction"></param>
         [ServerRpc]
         private void SendInputServerRpc(Vector2 direction)
         {
