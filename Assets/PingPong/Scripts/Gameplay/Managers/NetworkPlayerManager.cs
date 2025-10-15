@@ -38,15 +38,18 @@ namespace PingPong.Scripts.Gameplay.Managers
         
         public override void OnNetworkSpawn()
         {
-            if (IsServer)
-            {
-                NetworkManager.Singleton.OnClientConnectedCallback += ClientConnected;
-                NetworkManager.Singleton.OnClientDisconnectCallback += ClientDisconnected;
+            if (!IsServer) return;
+            
+            Debug.Log($"Network Spawned: {gameObject.name}");
+            
+            NetworkManager.Singleton.OnClientConnectedCallback += ClientConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback += ClientDisconnected;
 
-                NetworkGameManager.Instance.OnGameStart += SpawnPlayers;
-            }
+            NetworkGameManager.Instance.OnGameStart += SpawnPlayers;
+
+            FirstLaunchHandler();
         }
-        
+
         public override void OnNetworkDespawn()
         {
             if (IsServer)
@@ -59,6 +62,19 @@ namespace PingPong.Scripts.Gameplay.Managers
             
             _connectedClients.Clear();
             _playerIds.Clear();
+        }
+        
+        private void FirstLaunchHandler()
+        {
+            foreach (var clientId in NetworkManager.Singleton.ConnectedClientsIds)
+            {
+                if (!_connectedClients.Contains(clientId))
+                {
+                    _connectedClients.Add(clientId);
+                    OnClientConnected?.Invoke(clientId);
+                }
+            }
+            Debug.Log($"FirstLaunchHandler {_connectedClients.Count}");
         }
 
         private void SpawnPlayers()
