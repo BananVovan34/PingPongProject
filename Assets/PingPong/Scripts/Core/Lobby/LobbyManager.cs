@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
-using Unity.Networking.Transport.Relay;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
@@ -12,28 +11,45 @@ using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Random = UnityEngine.Random;
 
-namespace PingPong.Scripts.Multiplayer.Lobby
+namespace PingPong.Scripts.Core.Lobby
 {
     public class LobbyManager : MonoBehaviour
     {
         public static LobbyManager Instance { get; private set; }
 
         /// <summary>
-        /// Host lobby, if you hosted
+        /// Current lobby (host/joined)
         /// </summary>
-        private Unity.Services.Lobbies.Models.Lobby _hostLobby;
-        /// <summary>
-        /// Joined lobby, if you joined
-        /// </summary>
-        private Unity.Services.Lobbies.Models.Lobby _joinedLobby;
-        /// <summary>
-        /// Send heartbeat to UGS to tell lobby is alive
-        /// </summary>
-        private float _heartbeatTimer;
+        private Unity.Services.Lobbies.Models.Lobby _currentLobby;
+        private bool _isCreatingLobby;
+        private string _relayJoinCode;
+        
+        private Player _player;
+        private string _playerId;
 
+        public string RelayJoinCode
+        {
+            get
+            {
+                if (_currentLobby?.Data != null && _currentLobby.Data.ContainsKey(RelayCodeKey))
+                    return _currentLobby.Data[RelayCodeKey].Value;
+                return _relayJoinCode;
+            }
+        }
+        public string PlayerId => _playerId;
+        public bool IsPlayerHost => _currentLobby != null && _currentLobby.HostId == PlayerId;
+        
+        private float _heartbeatTimer = 15f;
+        private ILobbyEvents _lobbyEvents;
+
+        private const string BasePlayerName = "Player";
         private const string RelayCodeKey = "RelayCode";
+        private string PlayerNameKey => "PlayerName";
         private const int MaxPlayers = 2;
+        
+        public Action<List<string>> LobbyPlayersChanged;
 
         private void Awake()
         {
@@ -51,6 +67,7 @@ namespace PingPong.Scripts.Multiplayer.Lobby
         private async void Start()
         {
             await InitializeUnityAuthentication();
+            CreatePlayer();
         }
 
         /// <summary>
@@ -63,10 +80,24 @@ namespace PingPong.Scripts.Multiplayer.Lobby
 
             AuthenticationService.Instance.SignedIn += () =>
             {
-                Debug.Log($"Signed in as player: {AuthenticationService.Instance.PlayerId}");
+                _playerId = AuthenticationService.Instance.PlayerId;
+                Debug.Log($"Signed in as player: {PlayerId}");
             };
 
             await AuthenticationService.Instance.SignInAnonymouslyAsync();
+        }
+        
+        private void CreatePlayer()
+        {
+            var playerName = BasePlayerName + Random.Range(1, 101);
+            
+            _player = new Player
+            {
+                Data = new Dictionary<string, PlayerDataObject>()
+                {
+                    { PlayerNameKey, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, playerName) }
+                }
+            };
         }
 
         private void Update()
@@ -79,7 +110,9 @@ namespace PingPong.Scripts.Multiplayer.Lobby
         /// </summary>
         private async void HandlerLobbyHeartbeat()
         {
-            if (_hostLobby == null) return;
+            if (_currentLobby == null) return;
+            if (!IsPlayerHost) return;
+            if (!AuthenticationService.Instance.IsSignedIn) return;
 
             _heartbeatTimer -= Time.deltaTime;
             if (_heartbeatTimer <= 0f)
@@ -87,7 +120,7 @@ namespace PingPong.Scripts.Multiplayer.Lobby
                 _heartbeatTimer = 15f;
                 try
                 {
-                    await LobbyService.Instance.SendHeartbeatPingAsync(_hostLobby.Id);
+                    await LobbyService.Instance.SendHeartbeatPingAsync(_currentLobby.Id);
                     Debug.Log("Heartbeat sent");
                 }
                 catch (Exception e)
@@ -108,27 +141,147 @@ namespace PingPong.Scripts.Multiplayer.Lobby
         /// <param name="lobbyName"></param>
         /// <param name="isPrivate"></param>
         public async Task CreateLobby(string lobbyName = "New Lobby", bool isPrivate = false) {
+            if (!UnityServices.State.Equals(ServicesInitializationState.Initialized) || 
+                !AuthenticationService.Instance.IsSignedIn)
+            {
+                Debug.LogWarning("Unity Services not initialized or player not signed in.");
+                return;
+            }
+            if (_isCreatingLobby) return;
+            if (_currentLobby != null)
+            {
+                Debug.LogWarning($"Lobby already exists: {_currentLobby.Id}");
+                return;
+            }
+
             try
             {
+                _isCreatingLobby = true;
                 Unity.Services.Lobbies.Models.Lobby lobby = await LobbyService.Instance.CreateLobbyAsync(
                     lobbyName,
                     MaxPlayers,
                     new CreateLobbyOptions
                     {
-                        IsPrivate = isPrivate
+                        IsPrivate = isPrivate,
+                        Player = _player
                     }
-                    );
-                
-                _hostLobby = lobby;
-                
+                );
+
+                _currentLobby = lobby;
+
                 Debug.Log($"Lobby created: {lobby.Name}, id: {lobby.Id}");
+                UpdatePlayersList();
 
                 await SetupRelayForHost();
+
+                var callbacks = new LobbyEventCallbacks();
+                callbacks.PlayerJoined += PlayerJoinedHandler;
+                callbacks.PlayerLeft += PlayerLeftHandler;
+                callbacks.LobbyDeleted += OnLobbyDeleted;
+
+                try
+                {
+                    await SubscribeToLobbyEvents(_currentLobby);
+                }
+                catch (LobbyServiceException e)
+                {
+                    switch (e.Reason)
+                    {
+                        case LobbyExceptionReason.AlreadySubscribedToLobby:
+                            Debug.LogWarning(
+                                $"Already subscribed to lobby[{lobby.Id}]. We did not need to try and subscribe again. Exception Message: {e.Message}");
+                            break;
+                        case LobbyExceptionReason.SubscriptionToLobbyLostWhileBusy:
+                            Debug.LogError(
+                                $"Subscription to lobby events was lost while it was busy trying to subscribe. Exception Message: {e.Message}");
+                            throw;
+                        case LobbyExceptionReason.LobbyEventServiceConnectionError:
+                            Debug.LogError($"Failed to connect to lobby events. Exception Message: {e.Message}");
+                            throw;
+                        default: throw;
+                    }
+                }
             }
             catch (LobbyServiceException e)
             {
                 Debug.Log(e);
             }
+            finally
+            {
+                _isCreatingLobby = false;
+            }
+        }
+
+        private void OnLobbyDeleted()
+        {
+            Debug.Log("Lobby deleted by host. Disconnecting...");
+
+            _currentLobby = null;
+            _relayJoinCode = null;
+
+            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsClient)
+            {
+                NetworkManager.Singleton.Shutdown();
+            }
+            
+            _ = UnsubscribeFromLobbyEvents();
+        }
+
+        private async void PlayerJoinedHandler(List<LobbyPlayerJoined> joinedPlayers)
+        {
+            Debug.Log($"{joinedPlayers.Count} players joined.");
+    
+            try
+            {
+                _currentLobby = await LobbyService.Instance.GetLobbyAsync(_currentLobby.Id);
+                UpdatePlayersList();
+            }
+            catch (Exception e)
+            {
+                Debug.Log($"Error updating lobby after player join: {e}");
+            }
+        }
+
+        private async void PlayerLeftHandler(List<int> leftPlayers)
+        {
+            Debug.Log($"{leftPlayers.Count} players left.");
+            
+            try
+            {
+                _currentLobby = await LobbyService.Instance.GetLobbyAsync(_currentLobby.Id);
+                UpdatePlayersList();
+            }
+            catch (Exception e)
+            {
+                Debug.Log($"Error updating lobby after player left: {e}");
+            }
+        }
+
+        private void UpdatePlayersList()
+        {
+            Debug.Log("UpdatePlayersList called");
+            if (_currentLobby == null)
+            {
+                Debug.LogWarning("currentLobby == null");
+                return;
+            }
+
+            if (_currentLobby.Players == null || _currentLobby.Players.Count == 0)
+            {
+                Debug.LogWarning("no players in current lobby");
+            }
+
+            var players = new List<string>();
+            foreach (var p in _currentLobby.Players)
+            {
+                string name = p.Profile?.Name;
+                if (string.IsNullOrEmpty(name) && p.Data != null && p.Data.ContainsKey("PlayerName"))
+                    name = p.Data["PlayerName"].Value;
+                players.Add(string.IsNullOrEmpty(name) ? p.Id : name);
+            }
+
+            Debug.Log("Players: " + string.Join(", ", players));
+            LobbyPlayersChanged?.Invoke(players);
         }
 
         /// <summary>
@@ -139,57 +292,140 @@ namespace PingPong.Scripts.Multiplayer.Lobby
             try
             {
                 var allocation = await RelayService.Instance.CreateAllocationAsync(MaxPlayers - 1);
-                string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
+                _relayJoinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
+                
+                Debug.Log($"Allocation created. Join code: {_relayJoinCode}");
 
                 UpdateLobbyOptions updateLobbyOptions = new UpdateLobbyOptions
                 {
                     Data = new Dictionary<string, DataObject>
                     {
-                        { RelayCodeKey, new DataObject(DataObject.VisibilityOptions.Member, joinCode) }
+                        { RelayCodeKey, new DataObject(DataObject.VisibilityOptions.Member, _relayJoinCode) }
                     }
                 };
                 
-                await LobbyService.Instance.UpdateLobbyAsync(_hostLobby.Id, updateLobbyOptions);
+                _currentLobby = await LobbyService.Instance.UpdateLobbyAsync(_currentLobby.Id, updateLobbyOptions);
 
                 var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
                 transport.SetRelayServerData(AllocationUtils.ToRelayServerData(allocation, "dtls"));
                 
                 NetworkManager.Singleton.StartHost();
             }
-            catch (LobbyServiceException e)
+            catch (RelayServiceException e)
             {
                 Debug.Log(e);
             }
         }
-
-        public async Task DeleteLobby()
+        
+        private async Task SubscribeToLobbyEvents(Unity.Services.Lobbies.Models.Lobby lobby)
         {
-            if (_hostLobby == null) return;
+            try
+            {
+                var callbacks = new LobbyEventCallbacks();
+                callbacks.PlayerJoined += PlayerJoinedHandler;
+                callbacks.PlayerLeft += PlayerLeftHandler;
+                callbacks.LobbyDeleted += OnLobbyDeleted;
+
+                _lobbyEvents = await LobbyService.Instance.SubscribeToLobbyEventsAsync(lobby.Id, callbacks);
+                Debug.Log("Subscribed to lobby events");
+            }
+            catch (LobbyServiceException e)
+            {
+                switch (e.Reason)
+                {
+                    case LobbyExceptionReason.AlreadySubscribedToLobby:
+                        Debug.LogWarning(
+                            $"Already subscribed to lobby[{lobby.Id}]. We did not need to try and subscribe again. Exception Message: {e.Message}");
+                        break;
+                    case LobbyExceptionReason.SubscriptionToLobbyLostWhileBusy:
+                        Debug.LogError(
+                            $"Subscription to lobby events was lost while it was busy trying to subscribe. Exception Message: {e.Message}");
+                        throw;
+                    case LobbyExceptionReason.LobbyEventServiceConnectionError:
+                        Debug.LogError($"Failed to connect to lobby events. Exception Message: {e.Message}");
+                        throw;
+                    default: throw;
+                }
+            }
+        }
+        
+        private async Task UnsubscribeFromLobbyEvents()
+        {
+            if (_lobbyEvents == null) return;
             
             try
             {
-                await LobbyService.Instance.DeleteLobbyAsync(_hostLobby.Id);
+                await _lobbyEvents.UnsubscribeAsync();
+                Debug.Log("Unsubscribed from lobby events");
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"Unsubscribe failed: {e}");
+            }
+            finally
+            {
+                _lobbyEvents = null;
+            }
+        }
+
+        public void DeleteLobby()
+        {
+            _ = DeleteLobbyTask();
+        }
+
+        public async Task DeleteLobbyTask()
+        {
+            if (_currentLobby == null) return;
+            if (!IsPlayerHost) return;
+
+            try
+            {
+                await LobbyService.Instance.DeleteLobbyAsync(_currentLobby.Id);
                 Debug.Log("Lobby deleted");
-                _hostLobby = null;
+                _currentLobby = null;
             }
             catch (LobbyServiceException e)
             {
                 Debug.Log(e);
+            }
+            finally
+            {
+                NetworkManager.Singleton.Shutdown();
             }
         }
 
         public async Task QuickJoin()
         {
+            if (_currentLobby != null) return;
+            if (IsPlayerHost) return;
+
             try
             {
-                _joinedLobby = await LobbyService.Instance.QuickJoinLobbyAsync();
-                Debug.Log("Quick joined lobby: " + _joinedLobby.Name);
+                _currentLobby = await LobbyService.Instance.QuickJoinLobbyAsync(new QuickJoinLobbyOptions
+                {
+                    Player = _player
+                });
+                Debug.Log($"Quick joined lobby: {_currentLobby.Name},  {_currentLobby.HostId}");
 
-                await JoinRelayFromLobby(_joinedLobby);
+                await JoinRelayFromLobby(_currentLobby);
+                
+                try
+                {
+                    await SubscribeToLobbyEvents(_currentLobby);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"Client could not subscribe to lobby events, using polling instead: {e}");
+                }
+                
+                UpdatePlayersList();
             }
             catch (LobbyServiceException e)
             {
-                Debug.Log(e);
+                if (e.Reason == LobbyExceptionReason.LobbyNotFound)
+                    Debug.LogWarning("No available lobbies found for quick join.");
+                else
+                    Debug.LogError($"Quick join failed: {e}");
             }
         }
 
@@ -197,17 +433,52 @@ namespace PingPong.Scripts.Multiplayer.Lobby
         {
             try
             {
+                if (!joinedLobby.Data.ContainsKey(RelayCodeKey))
+                {
+                    Debug.LogWarning("Relay join code not found in lobby data!");
+                    return;
+                }
+                
                 string relayCode = joinedLobby.Data[RelayCodeKey].Value;
                 var joinAllocation = await RelayService.Instance.JoinAllocationAsync(relayCode);
 
                 var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
                 transport.SetRelayServerData(AllocationUtils.ToRelayServerData(joinAllocation, "dtls"));
 
-                NetworkManager.Singleton.StartHost();
+                NetworkManager.Singleton.StartClient();
+                
+                Debug.Log($"Client joined relay with code: {relayCode}");
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e);
+            }
+        }
+
+        public void LeaveLobby()
+        {
+            _ = LeaveLobbyTask();
+        }
+
+        private async Task LeaveLobbyTask()
+        {
+            if (_currentLobby == null) return;
+
+            try
+            {
+                string playerId = AuthenticationService.Instance.PlayerId;
+                await LobbyService.Instance.RemovePlayerAsync(_currentLobby.Id, playerId);
+                _currentLobby = null;
+                
+                await UnsubscribeFromLobbyEvents();
             }
             catch (LobbyServiceException e)
             {
                 Debug.Log(e);
+            }
+            finally
+            {
+                NetworkManager.Singleton.Shutdown();
             }
         }
 
@@ -234,9 +505,26 @@ namespace PingPong.Scripts.Multiplayer.Lobby
 
         public void StartGame()
         {
+            if (_currentLobby == null) return;
+            if (!IsPlayerHost) return;
             if (!NetworkManager.Singleton.IsHost) return;
+            if (_currentLobby.Players.Count != 2) return;
             
-            NetworkManager.Singleton.SceneManager.LoadScene("Gameplay", LoadSceneMode.Single);
+            NetworkManager.Singleton.SceneManager.LoadScene("Game", LoadSceneMode.Single);
+        }
+
+        public void EndGame()
+        {
+            if (_currentLobby == null) return;
+            
+            if (!IsPlayerHost) LeaveLobby();
+            if (IsPlayerHost) DeleteLobby();
+            NetworkManager.Singleton.Shutdown();
+        }
+        
+        private void OnDestroy()
+        {
+            _ = UnsubscribeFromLobbyEvents();
         }
     }
 }

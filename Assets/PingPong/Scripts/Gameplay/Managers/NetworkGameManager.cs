@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using PingPong.Scripts.Core.Lobby;
 using PingPong.Scripts.Gameplay.Ball;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace PingPong.Scripts.Gameplay.Managers
 {
@@ -11,7 +14,7 @@ namespace PingPong.Scripts.Gameplay.Managers
     {
         public static NetworkGameManager Instance { get; private set; }
         
-        private GameState _currentGameState;
+        private GameState _currentGameState = GameState.WaitingForPlayers;
 
         private int _lastCountOfConnectedClients;
         
@@ -35,6 +38,8 @@ namespace PingPong.Scripts.Gameplay.Managers
         public override void OnNetworkSpawn()
         {
             if (!IsServer) return;
+            
+            Debug.Log("OnNetworkSpawn");
 
             NetworkPlayerManager.Instance.OnClientConnected += TryStartGame;
             NetworkPlayerManager.Instance.OnClientDisconnected += ClientDisconnected;
@@ -42,6 +47,8 @@ namespace PingPong.Scripts.Gameplay.Managers
             NetworkScoreManager.Instance.OnScoredPointsToWin += EndGame;
 
             BallController.Instance.OnScoreZoneReached += EndRound;
+            
+            NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += OnSceneLoaded;
         }
 
         public override void OnNetworkDespawn()
@@ -54,6 +61,23 @@ namespace PingPong.Scripts.Gameplay.Managers
             NetworkScoreManager.Instance.OnScoredPointsToWin -= EndGame;
             
             BallController.Instance.OnScoreZoneReached -= EndRound;
+            
+            if (NetworkManager.Singleton != null && NetworkManager.Singleton.SceneManager != null)
+            {
+                NetworkManager.Singleton.SceneManager.OnLoadEventCompleted -= OnSceneLoaded;
+            }
+        }
+
+        private void OnSceneLoaded(string sceneName, LoadSceneMode loadSceneMode, List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
+        {
+            Debug.Log($"Scene loaded: {sceneName}. Clients completed: {clientsCompleted.Count}");
+            StartCoroutine(WaitAndTryStartGame());
+        }
+        
+        private IEnumerator WaitAndTryStartGame()
+        {
+            yield return new WaitForSeconds(2f);
+            TryStartGame(123);
         }
 
         private void ClientDisconnected(ulong obj)
@@ -73,6 +97,7 @@ namespace PingPong.Scripts.Gameplay.Managers
         {
             Debug.Log("TryStartGame");
             int countOfConnectedClients = NetworkPlayerManager.Instance.ConnectedClients.Count;
+            Debug.Log("CountOfConnectedClients: " + countOfConnectedClients);
             
             if (countOfConnectedClients >= 2 && _currentGameState == GameState.WaitingForPlayers)
                 StartGame();
@@ -107,6 +132,26 @@ namespace PingPong.Scripts.Gameplay.Managers
         {
             _currentGameState = GameState.End;
             OnGameEnd?.Invoke(winnerId);
+            StartCoroutine(EndGameSession());
+        }
+
+        private void NotifyLobbyManagerAboutGameEnd() =>
+            NotifyGameEndClientRpc();
+
+        [ClientRpc]
+        private void NotifyGameEndClientRpc()
+        {
+            if (LobbyManager.Instance != null)
+            {
+                LobbyManager.Instance.EndGame();
+            }
+            NetworkManager.SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
+        }
+
+        private IEnumerator EndGameSession()
+        {
+            yield return new WaitForSeconds(5f);
+            NotifyLobbyManagerAboutGameEnd();
         }
     }
 

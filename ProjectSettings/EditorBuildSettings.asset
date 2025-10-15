@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/PingPong/Scenes/MainMenu.unity
+    guid: 402002e0247f23040a7324c11f9fb005
+  - enabled: 1
     path: Assets/PingPong/Scenes/Game.unity
     guid: f969e5ba6037b3d4eba082364058285b
   m_configObjects:
