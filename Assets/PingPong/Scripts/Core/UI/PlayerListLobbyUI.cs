@@ -18,6 +18,7 @@ namespace PingPong.Scripts.Core.UI
         private void UpdatePlayerListText(List<string> playerList)
         {
             StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.AppendLine("Player List:");
 
             foreach (var player in playerList)
             {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using PingPong.Scripts.Core.UI;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Services.Authentication;
@@ -11,6 +12,7 @@ using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
 namespace PingPong.Scripts.Core.Lobby
@@ -50,6 +52,7 @@ namespace PingPong.Scripts.Core.Lobby
         private const int MaxPlayers = 2;
         
         public Action<List<string>> LobbyPlayersChanged;
+        public Action<string> RelayJoinCodeChanged;
 
         private void Awake()
         {
@@ -66,6 +69,8 @@ namespace PingPong.Scripts.Core.Lobby
 
         private async void Start()
         {
+            LobbyJoinCodeUI.Instance.JoinWithCodeButtonPressed += TryJoinWithCode;
+            
             await InitializeUnityAuthentication();
             CreatePlayer();
         }
@@ -300,7 +305,7 @@ namespace PingPong.Scripts.Core.Lobby
                 {
                     Data = new Dictionary<string, DataObject>
                     {
-                        { RelayCodeKey, new DataObject(DataObject.VisibilityOptions.Member, _relayJoinCode) }
+                        { RelayCodeKey, new DataObject(DataObject.VisibilityOptions.Public, _relayJoinCode, DataObject.IndexOptions.S1) }
                     }
                 };
                 
@@ -310,6 +315,8 @@ namespace PingPong.Scripts.Core.Lobby
                 transport.SetRelayServerData(AllocationUtils.ToRelayServerData(allocation, "dtls"));
                 
                 NetworkManager.Singleton.StartHost();
+                
+                RelayJoinCodeChanged?.Invoke(RelayJoinCode);
             }
             catch (RelayServiceException e)
             {
@@ -429,6 +436,72 @@ namespace PingPong.Scripts.Core.Lobby
             }
         }
 
+        public void TryJoinWithCode(string relayJoinCode)
+        {
+            _ = TryJoinWithCodeTask(relayJoinCode);
+        }
+        
+        public async Task TryJoinWithCodeTask(string relayJoinCode)
+        {
+            if (string.IsNullOrWhiteSpace(relayJoinCode))
+            {
+                Debug.LogWarning("No relay join code provided.");
+                return;
+            }
+            
+            if (_currentLobby != null)
+            {
+                Debug.LogWarning("Already in lobby.");
+                return;
+            }
+
+            try
+            {
+                Debug.Log("Trying to join with code: " + relayJoinCode);
+
+                var queryResponse = await LobbyService.Instance.QueryLobbiesAsync(new QueryLobbiesOptions
+                {
+                    Filters = new List<QueryFilter>
+                    {
+                        new QueryFilter(QueryFilter.FieldOptions.S1, relayJoinCode, QueryFilter.OpOptions.EQ)
+                    }
+                });
+
+                if (queryResponse.Results.Count > 0)
+                {
+                    _currentLobby = await LobbyService.Instance.JoinLobbyByIdAsync(queryResponse.Results[0].Id, new JoinLobbyByIdOptions
+                    {
+                        Player = _player
+                    });
+                    Debug.Log("Joined lobby: " + _currentLobby.Name);
+                    
+                    await JoinRelayFromLobby(_currentLobby);
+                    
+                    UpdatePlayersList();
+                    
+                    try
+                    {
+                        await SubscribeToLobbyEvents(_currentLobby);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogWarning($"Could not subscribe to lobby events: {e}");
+                    }
+                }
+                else
+                {
+                    Debug.Log("No lobbies found.");
+                }
+            }
+            catch (LobbyServiceException e)
+            {
+                if (e.Reason == LobbyExceptionReason.LobbyNotFound)
+                    Debug.LogWarning("No available lobbies found for quick join.");
+                else
+                    Debug.LogError($"Quick join failed: {e}");
+            }
+        }
+
         private async Task JoinRelayFromLobby(Unity.Services.Lobbies.Models.Lobby joinedLobby)
         {
             try
@@ -448,6 +521,8 @@ namespace PingPong.Scripts.Core.Lobby
                 NetworkManager.Singleton.StartClient();
                 
                 Debug.Log($"Client joined relay with code: {relayCode}");
+                
+                RelayJoinCodeChanged?.Invoke(RelayJoinCode);
             }
             catch (Exception e)
             {
