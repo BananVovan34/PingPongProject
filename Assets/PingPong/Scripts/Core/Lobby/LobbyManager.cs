@@ -53,6 +53,10 @@ namespace PingPong.Scripts.Core.Lobby
         
         public Action<List<string>> LobbyPlayersChanged;
         public Action<string> RelayJoinCodeChanged;
+        public event Action OnLobbyCreatedSuccessfully;
+        public event Action OnLobbyJoinedSuccessfully;
+        public event Action OnLobbyLeftSuccessfully;
+        public event Action<string> OnLobbyJoinFailed;
 
         private void Awake()
         {
@@ -69,7 +73,7 @@ namespace PingPong.Scripts.Core.Lobby
 
         private async void Start()
         {
-            LobbyJoinCodeUI.Instance.JoinWithCodeButtonPressed += TryJoinWithCode;
+            MenuUIManager.Instance.JoinWithCodeButtonPressed += TryJoinWithCode;
             
             await InitializeUnityAuthentication();
             CreatePlayer();
@@ -206,6 +210,8 @@ namespace PingPong.Scripts.Core.Lobby
                         default: throw;
                     }
                 }
+                
+                OnLobbyCreatedSuccessfully?.Invoke();
             }
             catch (LobbyServiceException e)
             {
@@ -429,6 +435,7 @@ namespace PingPong.Scripts.Core.Lobby
             }
             catch (LobbyServiceException e)
             {
+                OnLobbyJoinFailed?.Invoke("Unexpected error.");
                 if (e.Reason == LobbyExceptionReason.LobbyNotFound)
                     Debug.LogWarning("No available lobbies found for quick join.");
                 else
@@ -446,12 +453,14 @@ namespace PingPong.Scripts.Core.Lobby
             if (string.IsNullOrWhiteSpace(relayJoinCode))
             {
                 Debug.LogWarning("No relay join code provided.");
+                OnLobbyJoinFailed?.Invoke("No relay join code provided.");
                 return;
             }
             
             if (_currentLobby != null)
             {
                 Debug.LogWarning("Already in lobby.");
+                OnLobbyJoinFailed?.Invoke("Already in lobby.");
                 return;
             }
 
@@ -487,10 +496,13 @@ namespace PingPong.Scripts.Core.Lobby
                     {
                         Debug.LogWarning($"Could not subscribe to lobby events: {e}");
                     }
+                    
+                    OnLobbyJoinedSuccessfully?.Invoke();
                 }
                 else
                 {
                     Debug.Log("No lobbies found.");
+                    OnLobbyJoinFailed?.Invoke("Lobby not found");
                 }
             }
             catch (LobbyServiceException e)
@@ -554,6 +566,7 @@ namespace PingPong.Scripts.Core.Lobby
             finally
             {
                 NetworkManager.Singleton.Shutdown();
+                OnLobbyLeftSuccessfully?.Invoke();
             }
         }
 
