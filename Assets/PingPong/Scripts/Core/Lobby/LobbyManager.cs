@@ -432,6 +432,7 @@ namespace PingPong.Scripts.Core.Lobby
                 }
                 
                 UpdatePlayersList();
+                OnLobbyJoinedSuccessfully?.Invoke();
             }
             catch (LobbyServiceException e)
             {

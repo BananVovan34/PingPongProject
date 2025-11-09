@@ -67,6 +67,8 @@ namespace PingPong.Scripts.Core.UI
             connectingPanel.SetActive(false);
             errorPanel.SetActive(false);
             joinLobbyWithCodePanel.SetActive(false);
+            
+            joinCodeInputField.text = "";
         }
         
         public void ShowJoinLobbyWithCode()
