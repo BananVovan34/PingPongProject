@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
 using Unity.Netcode;
 using UnityEngine;
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
 
 namespace PingPong.Scripts.Gameplay.Managers
 {
@@ -12,8 +15,8 @@ namespace PingPong.Scripts.Gameplay.Managers
         [SerializeField] private Transform player1SpawnPoint;
         [SerializeField] private Transform player2SpawnPoint;
         
-        private Vector3 Player1SpawnPoint => player1SpawnPoint.position;
-        private Vector3 Player2SpawnPoint => player2SpawnPoint.position;
+        public Vector3 Player1SpawnPoint => player1SpawnPoint.position;
+        public Vector3 Player2SpawnPoint => player2SpawnPoint.position;
         
         public static NetworkPlayerManager Instance { get; private set; }
         
@@ -95,9 +98,9 @@ namespace PingPong.Scripts.Gameplay.Managers
         {
             Debug.Log("Spawning player " + playerId);
             
-            Vector3 position = playerId == 0 ? Player1SpawnPoint : Player2SpawnPoint;
+            //Vector3 position = playerId == 0 ? Player1SpawnPoint : Player2SpawnPoint;
             
-            GameObject playerInstance = Instantiate(playerPrefab, position, Quaternion.identity);
+            GameObject playerInstance = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
             NetworkObject networkObject = playerInstance.GetComponent<NetworkObject>();
             networkObject.SpawnAsPlayerObject(clientId);
         }
