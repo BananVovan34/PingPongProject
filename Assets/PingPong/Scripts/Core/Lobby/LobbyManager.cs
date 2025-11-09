@@ -435,11 +435,44 @@ namespace PingPong.Scripts.Core.Lobby
             }
             catch (LobbyServiceException e)
             {
-                OnLobbyJoinFailed?.Invoke("Unexpected error.");
-                if (e.Reason == LobbyExceptionReason.LobbyNotFound)
-                    Debug.LogWarning("No available lobbies found for quick join.");
-                else
-                    Debug.LogError($"Quick join failed: {e}");
+                string message;
+                switch (e.Reason)
+                {
+                    case LobbyExceptionReason.BadRequest:
+                    {
+                        message = "Bad request.";
+                        break;
+                    }
+                    case LobbyExceptionReason.BadGateway:
+                    {
+                        message = "Bad gateway.";
+                        break;
+                    }
+                    case LobbyExceptionReason.GatewayTimeout:
+                    {
+                        message = "Gateway timeout.";
+                        break;
+                    }
+                    case LobbyExceptionReason.NoOpenLobbies:
+                    {
+                        message = "No open lobbies. Try again later or create an own lobby";
+                        Debug.LogWarning("No available lobbies found for quick join.");
+                        break;
+                    }
+                    case LobbyExceptionReason.LobbyNotFound:
+                    {
+                        message = "No open lobbies. Try again later or create an own lobby";
+                        Debug.LogWarning("No available lobbies found for quick join.");
+                        break;
+                    }
+                    default:
+                    {
+                        message = "Unknown error.";
+                        Debug.LogError($"Quick join failed: {e}");
+                        break;
+                    }
+                }
+                OnLobbyJoinFailed?.Invoke(message);
             }
         }
 
@@ -501,16 +534,50 @@ namespace PingPong.Scripts.Core.Lobby
                 }
                 else
                 {
-                    Debug.Log("No lobbies found.");
-                    OnLobbyJoinFailed?.Invoke("Lobby not found");
+                    Debug.Log("No lobbies found. Check lobby code and try again.");
+                    OnLobbyJoinFailed?.Invoke("No lobbies found. Check lobby code and try again.");
                 }
             }
             catch (LobbyServiceException e)
             {
-                if (e.Reason == LobbyExceptionReason.LobbyNotFound)
-                    Debug.LogWarning("No available lobbies found for quick join.");
-                else
-                    Debug.LogError($"Quick join failed: {e}");
+                string message;
+                switch (e.Reason)
+                {
+                    case LobbyExceptionReason.BadRequest:
+                    {
+                        message = "Bad request.";
+                        break;
+                    }
+                    case LobbyExceptionReason.BadGateway:
+                    {
+                        message = "Bad gateway.";
+                        break;
+                    }
+                    case LobbyExceptionReason.GatewayTimeout:
+                    {
+                        message = "Gateway timeout.";
+                        break;
+                    }
+                    case LobbyExceptionReason.NoOpenLobbies:
+                    {
+                        message = "No open lobbies. Try again later or create an own lobby";
+                        Debug.LogWarning("No available lobbies found for quick join.");
+                        break;
+                    }
+                    case LobbyExceptionReason.LobbyNotFound:
+                    {
+                        message = "No open lobbies. Try again later or create an own lobby";
+                        Debug.LogWarning("No available lobbies found for quick join.");
+                        break;
+                    }
+                    default:
+                    {
+                        message = "Unknown error.";
+                        Debug.LogError($"Quick join failed: {e}");
+                        break;
+                    }
+                }
+                OnLobbyJoinFailed?.Invoke(message);
             }
         }
 

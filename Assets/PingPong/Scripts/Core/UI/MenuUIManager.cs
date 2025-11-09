@@ -124,6 +124,7 @@ namespace PingPong.Scripts.Core.UI
         public void JoinWithCodeButtonPress()
         {
             JoinWithCodeButtonPressed?.Invoke(joinCodeInputField.text);
+            joinCodeInputField.text = "";
         }
 
         private void UpdateJoinCodeText(string joinCode)
