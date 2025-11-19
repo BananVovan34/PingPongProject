@@ -152,6 +152,11 @@ namespace PingPong.Scripts.Gameplay.Managers
         {
             yield return new WaitForSeconds(5f);
             NotifyLobbyManagerAboutGameEnd();
+            if (IsServer)
+            {
+                NetworkManager.Singleton.Shutdown();
+                Application.Quit();
+            }
         }
     }
 

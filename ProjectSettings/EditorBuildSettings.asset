@@ -6,11 +6,17 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/PingPong/Scenes/Bootstrap.unity
+    guid: 19157acba1ee255439074369bcc88a5a
+  - enabled: 1
     path: Assets/PingPong/Scenes/MainMenu.unity
     guid: 402002e0247f23040a7324c11f9fb005
   - enabled: 1
     path: Assets/PingPong/Scenes/Game.unity
     guid: f969e5ba6037b3d4eba082364058285b
+  - enabled: 1
+    path: Assets/PingPong/Scenes/ServerScene.unity
+    guid: 48554bcc7166d17429538cd97e595cd0
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0
