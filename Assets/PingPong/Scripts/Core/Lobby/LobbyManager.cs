@@ -673,6 +673,9 @@ namespace PingPong.Scripts.Core.Lobby
         {
             if (_currentLobby == null) return;
             
+            SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
+            MenuUIManager.Instance.ShowMainMenu();
+            
             if (!IsPlayerHost) LeaveLobby();
             if (IsPlayerHost) DeleteLobby();
             NetworkManager.Singleton.Shutdown();

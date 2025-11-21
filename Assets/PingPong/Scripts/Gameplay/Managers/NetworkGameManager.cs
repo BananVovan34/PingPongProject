@@ -145,7 +145,6 @@ namespace PingPong.Scripts.Gameplay.Managers
             {
                 LobbyManager.Instance.EndGame();
             }
-            NetworkManager.SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
         }
 
         private IEnumerator EndGameSession()

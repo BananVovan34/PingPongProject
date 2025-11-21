@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Security.Principal;
 using PingPong.Scripts.Core;
 using PingPong.Scripts.Core.Network;
 using PingPong.Scripts.Gameplay.Interfaces;
@@ -19,32 +18,25 @@ namespace PingPong.Scripts.Gameplay.Player
         private IInputController _inputController;
         private Rigidbody2D _rigidbody2D;
         private SpriteRenderer _spriteRenderer;
-        
-        private byte _playerId;
-
-        private int tickRate = 60;
-        private int currentTick;
-        private float time;
-        private float tickDeltaTime;
-
-        private const int BufferSize = 1024;
-        private MovementData[] clientMovementData = new MovementData[BufferSize];
 
         private const float PlayerSpeed = 5f;
-        private const float MaxDeltaDistance = 1f;
-        private const float CorrectionLerp = 10f;
+        private const float CorrectionThreshold = 0.5f;
+        private const int BufferSize = 256;
 
-        private bool isTeleporting;
-        private bool lastIsTeleporting;
-        
-        private NetworkVariable<Vector2> _serverPosition = new NetworkVariable<Vector2>(writePerm: NetworkVariableWritePermission.Server);
+        private int tickRate = 60;
+        private float tickDeltaTime;
+        private float accumulator;
+
+        private int currentTick;
+
+        private MovementData[] history = new MovementData[BufferSize];
 
         private void Awake()
         {
             _rigidbody2D = GetComponent<Rigidbody2D>();
             _inputController = GetComponent<IInputController>();
             _spriteRenderer = GetComponent<SpriteRenderer>();
-            
+
             tickDeltaTime = 1f / tickRate;
         }
 
@@ -53,102 +45,97 @@ namespace PingPong.Scripts.Gameplay.Player
             base.OnNetworkSpawn();
             SetupPlayer();
         }
-        
-        private void Update()
-        {
-            time += Time.deltaTime;
-        }
 
-        private void FixedUpdate()
+        private void Update()
         {
             if (!IsOwner) return;
 
-            while (time > tickDeltaTime)
-            {
-                currentTick++;
-                time -= tickDeltaTime;
+            accumulator += Time.deltaTime;
 
-                Move();
+            while (accumulator >= tickDeltaTime)
+            {
+                accumulator -= tickDeltaTime;
+                Tick();
             }
         }
 
-        private void Move()
+        private void Tick()
         {
-            var direction = _inputController.GetVerticalInput().normalized;
-            var velocity = direction * PlayerSpeed;
+            currentTick++;
+
+            Vector2 direction = _inputController.GetVerticalInput().normalized;
+            Vector2 velocity = direction * PlayerSpeed;
 
             _rigidbody2D.linearVelocity = velocity;
 
-            clientMovementData[currentTick % BufferSize] = new MovementData()
+            int index = currentTick % BufferSize;
+            history[index] = new MovementData()
             {
                 tick = currentTick,
                 direction = direction,
+                velocity = velocity,
                 position = _rigidbody2D.position
             };
-            
-            Physics2D.SyncTransforms();
-            
-            MoveServerRpc(
-                clientMovementData[currentTick % BufferSize],
-                clientMovementData[(currentTick - 1) % BufferSize],
-                new ServerRpcParams()
-                {
-                    Receive = new ServerRpcReceiveParams() { SenderClientId = OwnerClientId }
-                }
-                );
-        }
-        
-        [ServerRpc]
-        private void MoveServerRpc(MovementData currentMovementData, MovementData previousMovementData, ServerRpcParams serverRpcParams)
-        {
-            Vector2 startPosition = _rigidbody2D.position;
-            Vector2 moveVector = previousMovementData.direction.normalized * PlayerSpeed;
-            Physics.simulationMode = SimulationMode.Script;
-            _rigidbody2D.position = previousMovementData.position;
-            _rigidbody2D.linearVelocity = moveVector;
-            Physics.Simulate(Time.fixedDeltaTime);
-            Vector2 correctPosition = _rigidbody2D.position;
-            _rigidbody2D.position = startPosition;
-            Physics.simulationMode = SimulationMode.FixedUpdate;
 
-            if (Vector2.Distance(correctPosition, currentMovementData.position) > MaxDeltaDistance)
-            {
-                Debug.LogWarning("Player is moving too fast");
-                
-                ReconciliateClientRPC(
-                    currentMovementData.tick,
-                    new ClientRpcParams()
+            SendInputServerRpc(direction, currentTick);
+        }
+
+        [ServerRpc]
+        private void SendInputServerRpc(Vector2 direction, int tickSent, ServerRpcParams rpcParams = default) 
+        {
+            Vector2 velocity = direction * PlayerSpeed;
+            _rigidbody2D.linearVelocity = velocity;
+
+            Vector2 serverPos = _rigidbody2D.position;
+
+            SendCorrectionClientRpc(serverPos, tickSent,
+                new ClientRpcParams()
+                {
+                    Send = new ClientRpcSendParams()
                     {
-                        Send = new ClientRpcSendParams()
+                        TargetClientIds = new List<ulong>()
                         {
-                            TargetClientIds = new List<ulong> { serverRpcParams.Receive.SenderClientId }
+                            rpcParams.Receive.SenderClientId
                         }
                     }
-                    );
-            }
-            
-            Vector2 endPosition = previousMovementData.position;
+                });
         }
         
         [ClientRpc]
-        private void ReconciliateClientRPC(int activationTick, ClientRpcParams parameters)
+        private void SendCorrectionClientRpc(Vector2 serverPos, int serverTick, ClientRpcParams parameters)
         {
-            Vector2 correctPosition = clientMovementData[(activationTick - 1) % BufferSize].position;
+            if (!IsOwner) return;
 
-            Physics.simulationMode = SimulationMode.Script;
-            while (activationTick <= currentTick)
+            int index = serverTick % BufferSize;
+            Vector2 predicted = history[index].position;
+
+            float error = Vector2.Distance(predicted, serverPos);
+
+            if (error < CorrectionThreshold)
+                return;
+
+            DoRewind(serverTick, serverPos);
+        }
+
+
+        private void DoRewind(int rewindTick, Vector2 serverPos)
+        {
+            _rigidbody2D.position = serverPos;
+
+            int tick = rewindTick;
+
+            while (tick < currentTick)
             {
-                Vector2 moveVector = clientMovementData[(activationTick - 1) % BufferSize].direction.normalized * PlayerSpeed;
-                transform.position = correctPosition;
-                _rigidbody2D.linearVelocity = moveVector;
-                Physics.Simulate(Time.fixedDeltaTime);
-                correctPosition = transform.position;
-                clientMovementData[activationTick % BufferSize].position = correctPosition;
-                activationTick++;
-            }
-            Physics.simulationMode = SimulationMode.FixedUpdate;
+                tick++;
 
-            transform.position = correctPosition;
+                int index = tick % BufferSize;
+                Vector2 velocity = history[index].velocity;
+
+                Vector2 newPos = _rigidbody2D.position + velocity * tickDeltaTime;
+
+                _rigidbody2D.position = newPos;
+                history[index].position = newPos;
+            }
         }
 
 
@@ -181,16 +168,8 @@ namespace PingPong.Scripts.Gameplay.Player
                     edgeMultiplier = -1f;
                 }
             }
-            
-            transform.position = NetworkPlayerManager.Instance.Player1SpawnPoint * edgeMultiplier;
-        }
 
-        private void SetPlayerId(byte playerId)
-        {
-            if (playerId > 1)
-                throw new ArgumentOutOfRangeException("playerId", "PlayerId must be between 0 and 1.");
-            
-            _playerId = playerId;
+            transform.position = NetworkPlayerManager.Instance.Player1SpawnPoint * edgeMultiplier;
         }
     }
 }
